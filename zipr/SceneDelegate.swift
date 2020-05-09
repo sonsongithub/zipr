@@ -1,23 +1,45 @@
 //
 //  SceneDelegate.swift
-//  zipr
+//  zippy
 //
-//  Created by sonson on 2020/05/09.
+//  Created by sonson on 2020/05/03.
 //  Copyright © 2020 sonson. All rights reserved.
 //
 
 import UIKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
-
     var window: UIWindow?
 
+    func stateRestorationActivity(for scene: UIScene) -> NSUserActivity? {
+        print(scene.userActivity)
+        return scene.userActivity
+    }
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+        
+        print("scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions)")
+        
+        print(connectionOptions.userActivities)
+        
         // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
         // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
         guard let _ = (scene as? UIWindowScene) else { return }
+        
+        #if targetEnvironment(macCatalyst)
+            if let windowScene = scene as? UIWindowScene {
+                if let titlebar = windowScene.titlebar {
+                    let toolbar = NSToolbar(identifier: "testToolbar")
+                    toolbar.delegate = self
+                    toolbar.allowsUserCustomization = false
+                    toolbar.centeredItemIdentifier = NSToolbarItem.Identifier(rawValue: "testGroup")
+                    titlebar.titleVisibility = .hidden
+
+                    titlebar.toolbar = toolbar
+                }
+            }
+            #endif
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -51,3 +73,31 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 }
 
+#if targetEnvironment(macCatalyst)
+extension SceneDelegate: NSToolbarDelegate {
+    
+    func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+        if (itemIdentifier == NSToolbarItem.Identifier(rawValue: "testGroup")) {
+            let group = NSToolbarItemGroup.init(itemIdentifier: NSToolbarItem.Identifier(rawValue: "testGroup"), titles: ["Solver", "Resistance", "Settings"], selectionMode: .selectOne, labels: ["section1", "section2", "section3"], target: self, action: #selector(toolbarGroupSelectionChanged))
+                
+            group.setSelected(true, at: 0)
+                
+            return group
+        }
+
+        return nil
+    }
+    
+    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        return [NSToolbarItem.Identifier(rawValue: "testGroup")]
+    }
+        
+    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        return self.toolbarDefaultItemIdentifiers(toolbar)
+    }
+    
+    @objc func toolbarGroupSelectionChanged(sender: NSToolbarItemGroup) {
+        print("testGroup selection changed to index: \(sender.selectedIndex)")
+    }
+}
+#endif

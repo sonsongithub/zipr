@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13122.16" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="16096" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="bbF-0i-IQp">
+    <device id="mac" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13104.12"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16087"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -9,16 +10,77 @@
         <!--View Controller-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="ViewController" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="zippy" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <rect key="frame" x="0.0" y="0.0" width="800" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" xcode11CocoaTouchSystemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="esC-J9-g6I">
+                                <rect key="frame" x="0.0" y="0.0" width="400" height="600"/>
+                            </imageView>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="NP0-tW-cbj">
+                                <rect key="frame" x="400" y="0.0" width="400" height="600"/>
+                            </imageView>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="large" translatesAutoresizingMaskIntoConstraints="NO" id="m4C-ie-2TF">
+                                <rect key="frame" x="381.5" y="281.5" width="37" height="37"/>
+                            </activityIndicatorView>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="NP0-tW-cbj" firstAttribute="leading" secondItem="esC-J9-g6I" secondAttribute="trailing" id="2an-pN-op2"/>
+                            <constraint firstItem="esC-J9-g6I" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="6po-H0-shR"/>
+                            <constraint firstItem="NP0-tW-cbj" firstAttribute="bottom" secondItem="6Tk-OE-BBY" secondAttribute="bottom" id="HLO-Wi-D21"/>
+                            <constraint firstItem="esC-J9-g6I" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="QuX-fR-tqP"/>
+                            <constraint firstItem="NP0-tW-cbj" firstAttribute="leading" secondItem="esC-J9-g6I" secondAttribute="trailing" id="SaP-Ia-dL4"/>
+                            <constraint firstItem="NP0-tW-cbj" firstAttribute="width" secondItem="esC-J9-g6I" secondAttribute="width" id="Y8E-qU-uI2"/>
+                            <constraint firstItem="m4C-ie-2TF" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="Yt7-X7-5kb"/>
+                            <constraint firstItem="NP0-tW-cbj" firstAttribute="trailing" secondItem="6Tk-OE-BBY" secondAttribute="trailing" id="grv-d8-LAW"/>
+                            <constraint firstItem="m4C-ie-2TF" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="ljm-QI-yS8"/>
+                            <constraint firstItem="NP0-tW-cbj" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="oEb-4g-q6I"/>
+                            <constraint firstItem="esC-J9-g6I" firstAttribute="bottom" secondItem="6Tk-OE-BBY" secondAttribute="bottom" id="qHv-Ob-O0T"/>
+                        </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
+                    <navigationItem key="navigationItem" id="UBh-aO-cOP"/>
+                    <connections>
+                        <outlet property="indicator" destination="m4C-ie-2TF" id="q1Q-uQ-bil"/>
+                        <outlet property="leftImageView" destination="esC-J9-g6I" id="Sx2-TP-5jf"/>
+                        <outlet property="rightImageView" destination="NP0-tW-cbj" id="HyY-5a-BgK"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
+            <point key="canvasLocation" x="1064" y="180"/>
+        </scene>
+        <!--View Controller-->
+        <scene sceneID="naP-iG-AhW">
+            <objects>
+                <viewController id="bbF-0i-IQp" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="Wb8-4m-0g3">
+                        <rect key="frame" x="0.0" y="0.0" width="800" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <containerView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="dIN-7M-osY">
+                                <rect key="frame" x="0.0" y="0.0" width="800" height="600"/>
+                                <connections>
+                                    <segue destination="BYZ-38-t0r" kind="embed" id="PdE-Ea-VYj"/>
+                                </connections>
+                            </containerView>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="dIN-7M-osY" firstAttribute="leading" secondItem="fV7-pL-H8v" secondAttribute="leading" id="KT0-nY-Dey"/>
+                            <constraint firstItem="dIN-7M-osY" firstAttribute="trailing" secondItem="fV7-pL-H8v" secondAttribute="trailing" id="Xo1-z5-M85"/>
+                            <constraint firstAttribute="bottom" secondItem="dIN-7M-osY" secondAttribute="bottom" id="rDr-o0-Jqt"/>
+                            <constraint firstItem="dIN-7M-osY" firstAttribute="top" secondItem="Wb8-4m-0g3" secondAttribute="top" id="vQH-Zh-sGP"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="fV7-pL-H8v"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="KDc-XP-Onh"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Hbi-Pp-R41" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="290" y="180"/>
         </scene>
     </scenes>
 </document>
