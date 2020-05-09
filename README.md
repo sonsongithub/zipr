@@ -1,5 +1,5 @@
 # zipr
-Reader for a zip file including only image files.
+Reader for a zip file including only image files. Support iOS, iPad OS, Mac Catalyst. Now, alpha version.
 
 # Acknowledgement
 
