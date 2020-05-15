@@ -12,7 +12,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
 
     func stateRestorationActivity(for scene: UIScene) -> NSUserActivity? {
-        print(scene.userActivity)
         return scene.userActivity
     }
 
@@ -27,11 +26,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
         guard let _ = (scene as? UIWindowScene) else { return }
         
+        
+        guard let baseVC = self.window?.rootViewController as? BaseViewController else {
+            return
+        }
+        
         #if targetEnvironment(macCatalyst)
             if let windowScene = scene as? UIWindowScene {
                 if let titlebar = windowScene.titlebar {
                     let toolbar = NSToolbar(identifier: "testToolbar")
-                    toolbar.delegate = self
+                    toolbar.delegate = baseVC
                     toolbar.allowsUserCustomization = false
                     toolbar.centeredItemIdentifier = NSToolbarItem.Identifier(rawValue: "testGroup")
                     titlebar.titleVisibility = .hidden
@@ -39,7 +43,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     titlebar.toolbar = toolbar
                 }
             }
-            #endif
+        #endif
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -72,32 +76,3 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 
 }
-
-#if targetEnvironment(macCatalyst)
-extension SceneDelegate: NSToolbarDelegate {
-    
-    func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
-        if (itemIdentifier == NSToolbarItem.Identifier(rawValue: "testGroup")) {
-            let group = NSToolbarItemGroup.init(itemIdentifier: NSToolbarItem.Identifier(rawValue: "testGroup"), titles: ["Solver", "Resistance", "Settings"], selectionMode: .selectOne, labels: ["section1", "section2", "section3"], target: self, action: #selector(toolbarGroupSelectionChanged))
-                
-            group.setSelected(true, at: 0)
-                
-            return group
-        }
-
-        return nil
-    }
-    
-    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        return [NSToolbarItem.Identifier(rawValue: "testGroup")]
-    }
-        
-    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        return self.toolbarDefaultItemIdentifiers(toolbar)
-    }
-    
-    @objc func toolbarGroupSelectionChanged(sender: NSToolbarItemGroup) {
-        print("testGroup selection changed to index: \(sender.selectedIndex)")
-    }
-}
-#endif

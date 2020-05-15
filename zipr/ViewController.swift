@@ -64,6 +64,11 @@ class ViewController: UIViewController, UIDocumentPickerDelegate {
         if let archiver = archiver {
             archiver.cancelAll()
         }
+        let activity = NSUserActivity(activityType: "ok")
+        activity.persistentIdentifier = NSUUID().uuidString
+        self.userActivity = activity
+        
+        
         openPicker()
     }
     
@@ -92,11 +97,20 @@ class ViewController: UIViewController, UIDocumentPickerDelegate {
             return
         }
         
+        guard let sent_identifier = userInfo["identifier"] as? String else {
+            return
+        }
+        
         DispatchQueue.main.async {
-            if self.currentLeftPage == page {
-                self.rightImageView?.image = image
-            } else if self.currentLeftPage + 1 == page {
-                self.leftImageView?.image = image
+            guard let identifider = self.userActivity?.persistentIdentifier else {
+                return
+            }
+            if sent_identifier == identifider {
+                if self.currentLeftPage == page {
+                    self.rightImageView?.image = image
+                } else if self.currentLeftPage + 1 == page {
+                    self.leftImageView?.image = image
+                }
             }
         }
         
@@ -121,10 +135,14 @@ class ViewController: UIViewController, UIDocumentPickerDelegate {
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
         print(urls)
         
+        guard let identifider = self.userActivity?.persistentIdentifier else {
+            return
+        }
+        
         if let url = urls.first {
             DispatchQueue.main.async {
                 do {
-                    let tmp = try Archiver(url)
+                    let tmp = try Archiver(url, identifier: identifider)
                     self.currentLeftPage = 0
                     self.archiver = tmp
                     self.archiver?.read(at: self.currentLeftPage)
@@ -137,8 +155,6 @@ class ViewController: UIViewController, UIDocumentPickerDelegate {
                     userActivity.addUserInfoEntries(from: state)
                     
                     self.view.window?.windowScene?.userActivity = userActivity
-                    
-//                    s = userActivity
                     
                 } catch let error as NSError {
                     print(error)
@@ -216,19 +232,10 @@ extension ViewController {
     
     override func updateUserActivityState(_ activity: NSUserActivity) {
         super.updateUserActivityState(activity)
-//        applyUserActivityEntries(activity)
     }
 
     override func restoreUserActivityState(_ activity: NSUserActivity) {
          super.restoreUserActivityState(activity)
-        
-//        // Check if the activity is of our type.
-//        if activity.activityType == DetailViewController.activityType {
-//            // Get the user activity data.
-//            if let activityUserInfo = activity.userInfo {
-//                restoreItemInterface(activityUserInfo)
-//            }
-//        }
     }
 
 }

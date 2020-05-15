@@ -27,15 +27,17 @@ class Archiver {
     let queue: DispatchQueue
     let semaphore = DispatchSemaphore(value: 0)
     let url: URL
+    let identifier: String
     
     var reading = false
     
     var taskQueue: [ArchiverTask] = Array([])
     var currentTask: ArchiverTask? = nil
     
-    init(_ fileURL: URL) throws {
+    init(_ fileURL: URL, identifier: String) throws {
         
         url = fileURL
+        self.identifier = identifier
         
         guard let tmp = Archive(url: fileURL, accessMode: .read) else {
             throw NSError(domain: "", code: 0, userInfo: nil)
@@ -119,7 +121,8 @@ class Archiver {
                 
                 let userInfo: [String: Any] = [
                     "image": image,
-                    "page": tempCurrentTask.page
+                    "page": tempCurrentTask.page,
+                    "identifier": self.identifier
                 ]
                 
                 NotificationCenter.default.post(name: Notification.Name("Loaded"), object: nil, userInfo: userInfo)
