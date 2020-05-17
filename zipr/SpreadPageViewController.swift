@@ -1,5 +1,5 @@
 //
-//  SinglePageViewController.swift
+//  SpreadPageViewController.swift
 //  zipr
 //
 //  Created by sonson on 2020/05/16.
@@ -9,26 +9,46 @@
 import Foundation
 import UIKit
 
-class SinglePageViewController: UIViewController, PageViewControllerProtocol {
-    let label = UILabel(frame: .zero)
+class SpreadPageViewController: UIViewController, PageViewControllerProtocol {
+    
+    let leftLabel = UILabel(frame: .zero)
+    let rightLabel = UILabel(frame: .zero)
     
     var page: Int = 0 {
         didSet {
-            label.text = String(format: "%d", page)
+            leftLabel.text = String(format: "%d", page + 1)
+            rightLabel.text = String(format: "%d", page + 0)
         }
+    }
+    
+    var leftPage: Int = 0 {
+        didSet {
+            leftLabel.text = String(format: "%d", leftPage)
+        }
+        
+    }
+    var rightPage: Int = 0 {
+        didSet {
+            rightLabel.text = String(format: "%d", rightPage)
+        }
+        
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        label.textAlignment = .center
-        label.font = UIFont.systemFont(ofSize: 22)
+        leftLabel.textAlignment = .center
+        leftLabel.font = UIFont.systemFont(ofSize: 22)
+        leftLabel.backgroundColor = .red
+        
+        rightLabel.textAlignment = .center
+        rightLabel.font = UIFont.systemFont(ofSize: 22)
         
         /// Instantiate StackView and configure it
         let stackView = UIStackView(frame: .zero)
         stackView.axis = .horizontal
         stackView.alignment = .center
-        stackView.distribution = .fill
+        stackView.distribution = .fillEqually
         stackView.spacing = 20
         stackView.translatesAutoresizingMaskIntoConstraints = false
 
@@ -40,6 +60,7 @@ class SinglePageViewController: UIViewController, PageViewControllerProtocol {
         view.leadingAnchor.constraint(equalTo: stackView.leadingAnchor).isActive = true
         view.trailingAnchor.constraint(equalTo: stackView.trailingAnchor).isActive = true
         
-        stackView.addArrangedSubview(label)
+        stackView.addArrangedSubview(leftLabel)
+        stackView.addArrangedSubview(rightLabel)
     }
 }

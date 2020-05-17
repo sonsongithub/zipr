@@ -157,5 +157,35 @@
             </objects>
             <point key="canvasLocation" x="1063.4765625" y="-611.42020497803799"/>
         </scene>
+        <!--Single Page View Controller-->
+        <scene sceneID="7vK-dJ-B2k">
+            <objects>
+                <viewController id="cW2-Z2-MPa" customClass="SinglePageViewController" customModule="zipr" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="nwu-t9-9Ls">
+                        <rect key="frame" x="0.0" y="0.0" width="1024" height="1366"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xku-iS-RFK">
+                                <rect key="frame" x="491" y="672.5" width="42" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="xku-iS-RFK" firstAttribute="centerY" secondItem="nwu-t9-9Ls" secondAttribute="centerY" id="D6X-6i-Aq5"/>
+                            <constraint firstItem="xku-iS-RFK" firstAttribute="centerX" secondItem="nwu-t9-9Ls" secondAttribute="centerX" id="ssr-SB-uvv"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="rFb-bL-v4j"/>
+                    </view>
+                    <connections>
+                        <outlet property="label" destination="xku-iS-RFK" id="REj-Vv-vkw"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="ADm-pQ-Eai" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1792" y="-611"/>
+        </scene>
     </scenes>
 </document>
