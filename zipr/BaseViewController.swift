@@ -16,10 +16,15 @@ class BaseViewController: UIViewController, UIDocumentPickerDelegate {
     var page: Int = 0
     var archiver: Archiver?
     
-    var pageType: PageType = .single
+    var pageType: PageType = .spread
     var pageDirection: PageDirection = .left
     
     var pageViewController: PageViewControllerOld!
+
+    #if targetEnvironment(macCatalyst)
+        var selectStyleToolbar: NSToolbarItemGroup?
+        var selectDirectionToolbar: NSToolbarItemGroup?
+    #endif
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,18 +33,55 @@ class BaseViewController: UIViewController, UIDocumentPickerDelegate {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        openPicker()
+        self.setViewController(flag: true)
+//        openPicker()
     }
     
+    func toggleSpread() {
+        pageType = .spread
+        updatePageView()
+        #if targetEnvironment(macCatalyst)
+            selectStyleToolbar?.setSelected(true, at: 0)
+            selectStyleToolbar?.setSelected(false, at: 1)
+        #endif
+    }
+    
+    func toggleSingle() {
+        pageType = .single
+        updatePageView()
+        #if targetEnvironment(macCatalyst)
+            selectStyleToolbar?.setSelected(false, at: 0)
+            selectStyleToolbar?.setSelected(true, at: 1)
+        #endif
+    }
+    
+    func toggleToRight() {
+        pageDirection = .right
+        updatePageView()
+        #if targetEnvironment(macCatalyst)
+            selectDirectionToolbar?.setSelected(false, at: 0)
+            selectDirectionToolbar?.setSelected(true, at: 1)
+        #endif
+    }
+    
+    func toggleToLeft() {
+        pageDirection = .left
+        updatePageView()
+        #if targetEnvironment(macCatalyst)
+            selectDirectionToolbar?.setSelected(true, at: 0)
+            selectDirectionToolbar?.setSelected(false, at: 1)
+        #endif
+    }
+
     func setViewController(flag: Bool) {
         
-        if let archiver = self.archiver {
-            let vc = PageViewController(archiver: archiver, page: 0, pageDirection: .left, pageType: .spread, pageOffset: .no)
+//        if let archiver = self.archiver {
+            let vc = PageViewController(archiver: archiver, page: 0, pageDirection: .right, pageType: .spread)
             self.addChild(vc)
             vc.view.frame = self.view.bounds
             self.view.addSubview(vc.view)
             vc.didMove(toParent: self)
-        }
+//        }
         
 //        if flag {
 //            guard let vc = storyboard?.instantiateViewController(identifier: "SinglePageViewController") as? PageViewControllerOld else {
@@ -126,10 +168,10 @@ class BaseViewController: UIViewController, UIDocumentPickerDelegate {
           activityType: "com.sonson.multiwindow"
         )
         
-        let conf = UISceneConfiguration(
-          name: "Default Configuration",
-          sessionRole: .windowApplication
-        )
+//        let conf = UISceneConfiguration(
+//          name: "Default Configuration",
+//          sessionRole: .windowApplication
+//        )
         
         UIApplication.shared.requestSceneSessionActivation(nil, userActivity: userActivity, options: nil, errorHandler: nil)
     }
@@ -183,7 +225,7 @@ class BaseViewController: UIViewController, UIDocumentPickerDelegate {
 //        }
 //    }
     func updatePageView() {
-        if let archiver = self.archiver {
+//        if let archiver = self.archiver {
             
             var page = 0
             
@@ -197,12 +239,12 @@ class BaseViewController: UIViewController, UIDocumentPickerDelegate {
             }
             
             
-            let vc = PageViewController(archiver: archiver, page: page, pageDirection: pageDirection, pageType: pageType, pageOffset: .no)
+            let vc = PageViewController(archiver: archiver, page: page, pageDirection: pageDirection, pageType: pageType)
             self.addChild(vc)
             vc.view.frame = self.view.bounds
             self.view.addSubview(vc.view)
             vc.didMove(toParent: self)
-        }
+//        }
     }
     
 }
@@ -213,29 +255,83 @@ extension BaseViewController: NSToolbarDelegate {
     
     func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
         
-        if (itemIdentifier == NSToolbarItem.Identifier(rawValue: "testGroup")) {
-            let group = NSToolbarItemGroup.init(itemIdentifier: NSToolbarItem.Identifier(rawValue: "testGroup"), titles: ["Spread", "Single"], selectionMode: .selectOne, labels: ["Spread", "Single"], target: self, action: #selector(BaseViewController.toolbarGroupSelectionChanged))
+        if (itemIdentifier == NSToolbarItem.Identifier(rawValue: "selectStyle")) {
+            let group = NSToolbarItemGroup.init(itemIdentifier: NSToolbarItem.Identifier(rawValue: "selectStyle"), titles: ["Spread", "Single"], selectionMode: .selectOne, labels: ["Spread", "Single"], target: self, action: #selector(BaseViewController.toolbarGroupSelectionChanged))
                 
             group.setSelected(true, at: 0)
             
+            selectStyleToolbar = group
                 
             return group
         }
         
-        if (itemIdentifier == NSToolbarItem.Identifier(rawValue: "testGroup2")) {
-            let group = NSToolbarItemGroup.init(itemIdentifier: NSToolbarItem.Identifier(rawValue: "testGroup2"), titles: ["Left", "Right"], selectionMode: .selectOne, labels: ["Left", "Right"], target: self, action: #selector(BaseViewController.toolbarGroupSelectionChanged_2))
+        if (itemIdentifier == NSToolbarItem.Identifier(rawValue: "space")) {
+            let item = NSToolbarItem(itemIdentifier: NSToolbarItem.Identifier(rawValue: "goRight"))
+    //            item.image = UIImage(systemName: "photo")?.forNSToolbar()
+            item.target = self
+            item.label = "Add Image"
+            item.title = "   "
+            
+            
+            return item
+        }
+        
+        if (itemIdentifier == NSToolbarItem.Identifier(rawValue: "selectDirection")) {
+            let group = NSToolbarItemGroup.init(itemIdentifier: NSToolbarItem.Identifier(rawValue: "selectDirection"), titles: ["Left", "Right"], selectionMode: .selectOne, labels: ["Left", "Right"], target: self, action: #selector(BaseViewController.toolbarGroupSelectionChanged_2))
                 
             group.setSelected(true, at: 0)
             
+            selectDirectionToolbar = group
                 
             return group
         }
+        
+        if (itemIdentifier == NSToolbarItem.Identifier(rawValue: "goLeft")) {
+//            let group = NSToolbarItemGroup.init(itemIdentifier: NSToolbarItem.Identifier(rawValue: "goLeft"), titles: ["L","a"], selectionMode: .momentary, labels: ["L","a"], target: self, action: #selector(BaseViewController.didPushLeft))
+//            return group
+            let item = NSToolbarItem(itemIdentifier: NSToolbarItem.Identifier(rawValue: "goLeft"))
+//            item.image = UIImage(systemName: "photo")?.forNSToolbar()
+            item.target = self
+            item.action = #selector(didPushLeft)
+            item.label = "Add Image"
+            item.title = "L"
+            item.isBordered = true
+            
+            return item
+        }
+        if (itemIdentifier == NSToolbarItem.Identifier(rawValue: "goRight")) {
+            let item = NSToolbarItem(itemIdentifier: NSToolbarItem.Identifier(rawValue: "goRight"))
+//            item.image = UIImage(systemName: "photo")?.forNSToolbar()
+            item.target = self
+            item.action = #selector(didPushRight)
+            item.label = "Add Image"
+            item.title = "R"
+            item.isBordered = true
+            
+            return item
+        }
+        
+        
 
         return nil
     }
     
+    @objc func didPushLeft(sender: NSToolbarItemGroup) {
+        print("didPushLeft")
+        if let vc = self.children.first as? PageViewController {
+            vc.pageToLeftByAPage()
+        }
+    }
+    
+    @objc func didPushRight(sender: NSToolbarItemGroup) {
+        print("didPushRight")
+        if let vc = self.children.first as? PageViewController {
+            vc.pageToRightByAPage()
+        }
+    }
+    
     func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        return [NSToolbarItem.Identifier.flexibleSpace, NSToolbarItem.Identifier(rawValue: "testGroup"), NSToolbarItem.Identifier.flexibleSpace, NSToolbarItem.Identifier(rawValue: "testGroup2"), NSToolbarItem.Identifier.flexibleSpace]
+        return [NSToolbarItem.Identifier.flexibleSpace, NSToolbarItem.Identifier(rawValue: "selectStyle"), NSToolbarItem.Identifier(rawValue: "space"), NSToolbarItem.Identifier(rawValue: "selectDirection"), NSToolbarItem.Identifier.flexibleSpace, NSToolbarItem.Identifier(rawValue: "goLeft"), NSToolbarItem.Identifier(rawValue: "goRight")]
     }
         
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {

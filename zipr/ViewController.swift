@@ -219,10 +219,10 @@ class ViewController: UIViewController, UIDocumentPickerDelegate {
           activityType: "com.sonson.multiwindow"
         )
         
-        let conf = UISceneConfiguration(
-          name: "Default Configuration",
-          sessionRole: .windowApplication
-        )
+//        let conf = UISceneConfiguration(
+//          name: "Default Configuration",
+//          sessionRole: .windowApplication
+//        )
         
         UIApplication.shared.requestSceneSessionActivation(nil, userActivity: userActivity, options: nil, errorHandler: nil)
     }
@@ -266,14 +266,6 @@ extension ViewController {
 /// - Tag: decodeRestorableState
     override func decodeRestorableState(with coder: NSCoder) {
         super.decodeRestorableState(with: coder)
-        
-//        if coder.containsValue(forKey: DetailViewController.restoreActivityKey) {
-//            if let decodedActivity = coder.decodeObject(forKey: DetailViewController.restoreActivityKey) as? NSUserActivityEncoder {
-//                if let activityUserInfo = decodedActivity.userActivity.userInfo {
-//                    restoreItemInterface(activityUserInfo)
-//                }
-//            }
-//        }
     }
     
 }

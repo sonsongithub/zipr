@@ -16,8 +16,6 @@ class SpreadPageViewController: UIViewController, PageViewControllerProtocol {
     
     var page: Int = 0 {
         didSet {
-            leftLabel.text = String(format: "%d", page + 1)
-            rightLabel.text = String(format: "%d", page + 0)
         }
     }
     
