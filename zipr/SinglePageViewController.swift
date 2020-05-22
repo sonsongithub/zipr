@@ -9,8 +9,9 @@
 import Foundation
 import UIKit
 
-class SinglePageViewController: UIViewController, PageViewControllerProtocol {
+class SinglePageViewController: UIViewController {
     let label = UILabel(frame: .zero)
+    let imageView = UIImageView(frame: .zero)
     
     var page: Int = 0 {
         didSet {
@@ -21,25 +22,81 @@ class SinglePageViewController: UIViewController, PageViewControllerProtocol {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        label.textAlignment = .center
-        label.font = UIFont.systemFont(ofSize: 22)
+        imageView.contentMode = .scaleAspectFit
         
-        /// Instantiate StackView and configure it
-        let stackView = UIStackView(frame: .zero)
-        stackView.axis = .horizontal
-        stackView.alignment = .center
-        stackView.distribution = .fill
-        stackView.spacing = 20
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-
-        view.addSubview(stackView)
-
-        /// Setup StackView's constraints to its superview
-        view.topAnchor.constraint(equalTo: stackView.topAnchor).isActive = true
-        view.bottomAnchor.constraint(equalTo: stackView.bottomAnchor).isActive = true
-        view.leadingAnchor.constraint(equalTo: stackView.leadingAnchor).isActive = true
-        view.trailingAnchor.constraint(equalTo: stackView.trailingAnchor).isActive = true
+        NotificationCenter.default.addObserver(self, selector: #selector(handle(notification:)), name: Notification.Name("Loaded"), object: nil)
         
-        stackView.addArrangedSubview(label)
+        do {
+            label.textAlignment = .center
+            label.font = UIFont.systemFont(ofSize: 22)
+            
+            /// Instantiate StackView and configure it
+            let stackView = UIStackView(frame: .zero)
+            stackView.axis = .horizontal
+            stackView.alignment = .center
+            stackView.distribution = .fill
+            stackView.spacing = 20
+            stackView.translatesAutoresizingMaskIntoConstraints = false
+
+            view.addSubview(stackView)
+
+            /// Setup StackView's constraints to its superview
+            view.topAnchor.constraint(equalTo: stackView.topAnchor).isActive = true
+            view.bottomAnchor.constraint(equalTo: stackView.bottomAnchor).isActive = true
+            view.leadingAnchor.constraint(equalTo: stackView.leadingAnchor).isActive = true
+            view.trailingAnchor.constraint(equalTo: stackView.trailingAnchor).isActive = true
+            
+            stackView.addArrangedSubview(label)
+        }
+        
+        do {
+            /// Instantiate StackView and configure it
+            let stackView = UIStackView(frame: .zero)
+            stackView.axis = .horizontal
+            stackView.alignment = .center
+            stackView.distribution = .fill
+            stackView.spacing = 20
+            stackView.translatesAutoresizingMaskIntoConstraints = false
+
+            view.addSubview(stackView)
+
+            /// Setup StackView's constraints to its superview
+            view.topAnchor.constraint(equalTo: stackView.topAnchor).isActive = true
+            view.bottomAnchor.constraint(equalTo: stackView.bottomAnchor).isActive = true
+            view.leadingAnchor.constraint(equalTo: stackView.leadingAnchor).isActive = true
+            view.trailingAnchor.constraint(equalTo: stackView.trailingAnchor).isActive = true
+            
+            stackView.addArrangedSubview(imageView)
+        }
+    }
+    
+    @objc func handle(notification : Notification) {
+        guard let userInfo = notification.userInfo else {
+            return
+        }
+        
+        guard let image = userInfo["image"] as? UIImage else {
+            return
+        }
+        
+        guard let page = userInfo["page"] as? Int else {
+            return
+        }
+        
+        guard let sent_identifier = userInfo["identifier"] as? String else {
+            return
+        }
+        
+        DispatchQueue.main.async {
+            guard let identifider = self.userActivity?.persistentIdentifier else {
+                return
+            }
+            if sent_identifier == identifider {
+                if self.page == page {
+                    self.imageView.image = image
+                }
+            }
+        }
+        
     }
 }
