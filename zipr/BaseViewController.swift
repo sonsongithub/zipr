@@ -14,12 +14,9 @@ class BaseViewController: UIViewController, UIDocumentPickerDelegate {
     @IBOutlet var activityIndicatorView: UIActivityIndicatorView? = nil
     
     var page: Int = 0
-    var archiver: Archiver?
     
     var pageType: PageType = .spread
     var pageDirection: PageDirection = .left
-    
-    var pageViewController: PageViewControllerOld!
 
     #if targetEnvironment(macCatalyst)
         var selectStyleToolbar: NSToolbarItemGroup?
@@ -73,37 +70,16 @@ class BaseViewController: UIViewController, UIDocumentPickerDelegate {
         #endif
     }
 
-    func setViewController(flag: Bool) {
-        
-//        if let archiver = self.archiver {
-            let vc = PageViewController(archiver: archiver, page: 0, pageDirection: .right, pageType: .spread)
-            self.addChild(vc)
-            vc.view.frame = self.view.bounds
-            self.view.addSubview(vc.view)
-            vc.didMove(toParent: self)
-//        }
-        
-//        if flag {
-//            guard let vc = storyboard?.instantiateViewController(identifier: "SinglePageViewController") as? PageViewControllerOld else {
-//                return
-//            }
+//    func setViewController(flag: Bool) {
 //
-//            pageViewController = vc
-//
+////        if let archiver = self.archiver {
+//            let vc = PageViewController(archiver: archiver, page: 0, pageDirection: .right, pageType: .spread)
 //            self.addChild(vc)
+//            vc.view.frame = self.view.bounds
 //            self.view.addSubview(vc.view)
 //            vc.didMove(toParent: self)
-//        } else {
-//            guard let vc = storyboard?.instantiateViewController(identifier: "DoublePageViewController") as? PageViewControllerOld else {
-//                return
-//            }
-//
-//            pageViewController = vc
-//            self.addChild(vc)
-//            self.view.addSubview(vc.view)
-//            vc.didMove(toParent: self)
-//        }
-    }
+////        }
+//    }
     
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
         print(urls)
@@ -115,19 +91,27 @@ class BaseViewController: UIViewController, UIDocumentPickerDelegate {
         if let url = urls.first {
             DispatchQueue.main.async {
                 do {
-                    let tmp = try Archiver(url, identifier: "a")
-                    self.archiver = tmp
+                    let archiver = try Archiver(url, identifier: "a")
 //                    self.archiver?.read(at: self.pageViewController.page)
                     
                     let userActivity = NSUserActivity(activityType: "reader")
                     userActivity.title = "Restore Item"
                     
-                    let state: [String: URL] = ["URL": tmp.url]
+                    let state: [String: URL] = ["URL": archiver.url]
                     userActivity.addUserInfoEntries(from: state)
                     
                     self.view.window?.windowScene?.userActivity = userActivity
-                    
-                    self.setViewController(flag: true)
+
+                    if let child = self.children.first {
+                        child.view.removeFromSuperview()
+                        child.removeFromParent()
+
+                    }
+                    let vc = PageViewController(archiver: archiver, page: self.page, pageDirection: self.pageDirection, pageType: self.pageType)
+                    self.addChild(vc)
+                    vc.view.frame = self.view.bounds
+                    self.view.addSubview(vc.view)
+                    vc.didMove(toParent: self)
                     
                 } catch let error as NSError {
                     print(error)
@@ -159,7 +143,7 @@ class BaseViewController: UIViewController, UIDocumentPickerDelegate {
     @objc
     // User chose "New" sub menu command from the File menu (New Date or Text item).
     func newAction(_ sender: UICommand) {
-//        openPicker()
+        openPicker()
     }
     @objc
     // User chose "New" sub menu command from the File menu (New Date or Text item).
@@ -168,15 +152,13 @@ class BaseViewController: UIViewController, UIDocumentPickerDelegate {
           activityType: "com.sonson.multiwindow"
         )
         
-//        let conf = UISceneConfiguration(
-//          name: "Default Configuration",
-//          sessionRole: .windowApplication
-//        )
-        
         UIApplication.shared.requestSceneSessionActivation(nil, userActivity: userActivity, options: nil, errorHandler: nil)
     }
     
     func openPicker() {
+        
+        
+        
         self.activityIndicatorView?.isHidden = false
         self.activityIndicatorView?.startAnimating()
 
@@ -187,64 +169,20 @@ class BaseViewController: UIViewController, UIDocumentPickerDelegate {
         }
     }
     
-    
-//    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-//        
-//        var didHandleEvent = false
-//        for press in presses {
-//            guard let key = press.key else { continue }
-//            if key.charactersIgnoringModifiers == UIKeyCommand.inputLeftArrow {
-//                self.pageViewController.page += 1
-//                archiver?.read(at: self.pageViewController.page)
-//                didHandleEvent = true
-//            }
-//            if key.keyCode == .keyboardSpacebar {
-////                currentLeftPage += 2
-////                archiver?.read(at: currentLeftPage)
-////                archiver?.read(at: currentLeftPage + 1)
-//                didHandleEvent = true
-//            }
-//            if key.charactersIgnoringModifiers == UIKeyCommand.inputRightArrow {
-//                self.pageViewController.page -= 1
-//                archiver?.read(at: self.pageViewController.page)
-//                didHandleEvent = true
-//            }
-//            if key.characters == "o" {
-//                if let archiver = archiver {
-//                    archiver.cancelAll()
-//                }
-//                
-//                openPicker()
-//                didHandleEvent = true
-//            }
-//        }
-//        
-//        if didHandleEvent == false {
-//            // Didn't handle this key press, so pass the event to the next responder.
-//            super.pressesBegan(presses, with: event)
-//        }
-//    }
     func updatePageView() {
-//        if let archiver = self.archiver {
-            
-            var page = 0
-            
-            if let child = self.children.first as? PageViewController {
+        if let child = self.children.first as? PageViewController {
+            if let archiver = child.archiver {
                 page = child.page
-            }
-            
-            if let child = self.children.first {
                 child.view.removeFromSuperview()
                 child.removeFromParent()
+
+                let vc = PageViewController(archiver: archiver, page: page, pageDirection: pageDirection, pageType: pageType)
+                self.addChild(vc)
+                vc.view.frame = self.view.bounds
+                self.view.addSubview(vc.view)
+                vc.didMove(toParent: self)
             }
-            
-            
-            let vc = PageViewController(archiver: archiver, page: page, pageDirection: pageDirection, pageType: pageType)
-            self.addChild(vc)
-            vc.view.frame = self.view.bounds
-            self.view.addSubview(vc.view)
-            vc.didMove(toParent: self)
-//        }
+        }
     }
     
 }
