@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="16096" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="bbF-0i-IQp">
-    <device id="ipad12_9rounded" orientation="portrait" layout="fullscreen" appearance="light"/>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="16097" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="bbF-0i-IQp">
+    <device id="mac" appearance="light"/>
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16087"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
@@ -12,17 +12,17 @@
             <objects>
                 <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="zipr" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
-                        <rect key="frame" x="0.0" y="0.0" width="1024" height="1366"/>
+                        <rect key="frame" x="0.0" y="0.0" width="800" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="esC-J9-g6I">
-                                <rect key="frame" x="0.0" y="0.0" width="512" height="1346"/>
+                                <rect key="frame" x="0.0" y="0.0" width="400" height="600"/>
                             </imageView>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="NP0-tW-cbj">
-                                <rect key="frame" x="512" y="0.0" width="512" height="1346"/>
+                                <rect key="frame" x="400" y="0.0" width="400" height="600"/>
                             </imageView>
                             <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="large" translatesAutoresizingMaskIntoConstraints="NO" id="m4C-ie-2TF">
-                                <rect key="frame" x="493.5" y="664.5" width="37" height="37"/>
+                                <rect key="frame" x="382" y="282" width="37" height="37"/>
                             </activityIndicatorView>
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
@@ -57,11 +57,11 @@
             <objects>
                 <viewController storyboardIdentifier="SinglePageViewController" id="on0-D1-zCe" customClass="SinglePageViewControllerOld" customModule="zipr" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="PwU-N6-996">
-                        <rect key="frame" x="0.0" y="0.0" width="1024" height="1366"/>
+                        <rect key="frame" x="0.0" y="0.0" width="800" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Yag-xI-aaQ">
-                                <rect key="frame" x="0.0" y="0.0" width="1024" height="1366"/>
+                                <rect key="frame" x="0.0" y="0.0" width="800" height="600"/>
                             </imageView>
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
@@ -84,17 +84,16 @@
         <!--Base View Controller-->
         <scene sceneID="naP-iG-AhW">
             <objects>
-                <viewController id="bbF-0i-IQp" customClass="BaseViewController" customModule="zipr" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController automaticallyAdjustsScrollViewInsets="NO" id="bbF-0i-IQp" customClass="BaseViewController" customModule="zipr" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Wb8-4m-0g3">
-                        <rect key="frame" x="0.0" y="0.0" width="1024" height="1366"/>
+                        <rect key="frame" x="0.0" y="0.0" width="800" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <containerView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="dIN-7M-osY">
-                                <rect key="frame" x="0.0" y="0.0" width="1024" height="1366"/>
+                                <rect key="frame" x="0.0" y="0.0" width="800" height="600"/>
                             </containerView>
-                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="large" translatesAutoresizingMaskIntoConstraints="NO" id="RdX-7A-rOF">
-                                <rect key="frame" x="502" y="673" width="20" height="20"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="large" translatesAutoresizingMaskIntoConstraints="NO" id="RdX-7A-rOF">
+                                <rect key="frame" x="382" y="282" width="37" height="37"/>
                             </activityIndicatorView>
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
@@ -105,11 +104,14 @@
                             <constraint firstItem="dIN-7M-osY" firstAttribute="trailing" secondItem="fV7-pL-H8v" secondAttribute="trailing" id="Xo1-z5-M85"/>
                             <constraint firstItem="dIN-7M-osY" firstAttribute="leading" secondItem="fV7-pL-H8v" secondAttribute="leading" id="aAH-am-UZk"/>
                             <constraint firstItem="dIN-7M-osY" firstAttribute="top" secondItem="fV7-pL-H8v" secondAttribute="top" id="ixD-LE-298"/>
+                            <constraint firstItem="RdX-7A-rOF" firstAttribute="centerY" secondItem="Wb8-4m-0g3" secondAttribute="centerY" id="okF-jP-WZY"/>
                             <constraint firstAttribute="bottom" secondItem="dIN-7M-osY" secondAttribute="bottom" id="rDr-o0-Jqt"/>
+                            <constraint firstItem="RdX-7A-rOF" firstAttribute="centerX" secondItem="Wb8-4m-0g3" secondAttribute="centerX" id="s3G-z0-hq4"/>
                             <constraint firstItem="dIN-7M-osY" firstAttribute="top" secondItem="Wb8-4m-0g3" secondAttribute="top" id="vQH-Zh-sGP"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="fV7-pL-H8v"/>
                     </view>
+                    <extendedEdge key="edgesForExtendedLayout" bottom="YES"/>
                     <navigationItem key="navigationItem" id="KDc-XP-Onh"/>
                     <connections>
                         <outlet property="activityIndicatorView" destination="RdX-7A-rOF" id="9bq-Hk-OVb"/>
@@ -117,21 +119,21 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Hbi-Pp-R41" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="290" y="180"/>
+            <point key="canvasLocation" x="288.75" y="179"/>
         </scene>
         <!--Double Page View Controller Old-->
         <scene sceneID="18g-Aa-gPK">
             <objects>
                 <viewController storyboardIdentifier="DoublePageViewController" id="QJ3-JY-dSl" customClass="DoublePageViewControllerOld" customModule="zipr" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="mdX-ug-osN">
-                        <rect key="frame" x="0.0" y="0.0" width="1024" height="1366"/>
+                        <rect key="frame" x="0.0" y="0.0" width="800" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="INJ-Dd-YH3">
-                                <rect key="frame" x="0.0" y="0.0" width="512" height="1366"/>
+                                <rect key="frame" x="0.0" y="0.0" width="400" height="600"/>
                             </imageView>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="uqc-9g-QSr">
-                                <rect key="frame" x="512" y="0.0" width="512" height="1366"/>
+                                <rect key="frame" x="400" y="0.0" width="400" height="600"/>
                             </imageView>
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
@@ -162,11 +164,11 @@
             <objects>
                 <viewController id="cW2-Z2-MPa" customClass="SinglePageViewController" customModule="zipr" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="nwu-t9-9Ls">
-                        <rect key="frame" x="0.0" y="0.0" width="1024" height="1366"/>
+                        <rect key="frame" x="0.0" y="0.0" width="800" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xku-iS-RFK">
-                                <rect key="frame" x="491" y="672.5" width="42" height="21"/>
+                                <rect key="frame" x="379" y="290" width="43" height="20"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>

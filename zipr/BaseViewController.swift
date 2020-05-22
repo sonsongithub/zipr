@@ -25,12 +25,51 @@ class BaseViewController: UIViewController, UIDocumentPickerDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-//        setViewController(flag: true)
+        self.edgesForExtendedLayout = []
+        openPicker()
+//        self.view.window?.windowScene.to
+
+        #if targetEnvironment(macCatalyst)
+        UIApplication.shared.connectedScenes.forEach { (scene) in
+            if let uiscene = scene as? UIWindowScene {
+                print(uiscene.windows.count)
+//                if uiscene.activationState == .foregroundActive {
+                    uiscene.windows.forEach { (window) in
+                        if window.rootViewController == self {
+                            print("find")
+                            uiscene.titlebar?.titleVisibility = .hidden
+                            uiscene.titlebar?.toolbar = nil
+                        }
+                    }
+//                }
+            }
+        }
+        #endif
+        let tapGesture:UITapGestureRecognizer = UITapGestureRecognizer(
+        target: self,
+        action: #selector(BaseViewController.tapped(_:)))
+            
+        self.view.addGestureRecognizer(tapGesture)
+//        if let a = self.view.window {
+//            print(a)
+//        }
+//
+//        if let titlebar = self.view.window?.windowScene?.titlebar {
+//            titlebar.titleVisibility = .visible
+//        }
+    }
+    
+    @objc func tapped(_ sender: UITapGestureRecognizer){
+        if sender.state == .ended {
+            
+            let pos = sender.location(in: self.view)
+            print(pos)
+        }
+        
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        self.setViewController(flag: true)
 //        openPicker()
     }
     
@@ -225,8 +264,6 @@ extension BaseViewController: NSToolbarDelegate {
         }
         
         if (itemIdentifier == NSToolbarItem.Identifier(rawValue: "goLeft")) {
-//            let group = NSToolbarItemGroup.init(itemIdentifier: NSToolbarItem.Identifier(rawValue: "goLeft"), titles: ["L","a"], selectionMode: .momentary, labels: ["L","a"], target: self, action: #selector(BaseViewController.didPushLeft))
-//            return group
             let item = NSToolbarItem(itemIdentifier: NSToolbarItem.Identifier(rawValue: "goLeft"))
 //            item.image = UIImage(systemName: "photo")?.forNSToolbar()
             item.target = self
@@ -269,7 +306,7 @@ extension BaseViewController: NSToolbarDelegate {
     }
     
     func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        return [NSToolbarItem.Identifier.flexibleSpace, NSToolbarItem.Identifier(rawValue: "selectStyle"), NSToolbarItem.Identifier(rawValue: "space"), NSToolbarItem.Identifier(rawValue: "selectDirection"), NSToolbarItem.Identifier.flexibleSpace, NSToolbarItem.Identifier(rawValue: "goLeft"), NSToolbarItem.Identifier(rawValue: "goRight")]
+        return [NSToolbarItem.Identifier.flexibleSpace, NSToolbarItem.Identifier(rawValue: "selectStyle"), NSToolbarItem.Identifier(rawValue: "selectDirection"), NSToolbarItem.Identifier.flexibleSpace, NSToolbarItem.Identifier(rawValue: "goLeft"), NSToolbarItem.Identifier(rawValue: "goRight")]
     }
         
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {

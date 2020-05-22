@@ -79,8 +79,8 @@
 		14B5B2222466CA8F00E5E9A2 /* zipr */ = {
 			isa = PBXGroup;
 			children = (
-				14F224912466F60C00630C87 /* Archiver.swift */,
 				14B5B2372466CA9500E5E9A2 /* zipr.entitlements */,
+				14F224912466F60C00630C87 /* Archiver.swift */,
 				14B5B2232466CA8F00E5E9A2 /* AppDelegate.swift */,
 				14B5B2252466CA8F00E5E9A2 /* SceneDelegate.swift */,
 				14B5B2272466CA8F00E5E9A2 /* ViewController.swift */,
