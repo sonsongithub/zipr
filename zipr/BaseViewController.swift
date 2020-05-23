@@ -166,6 +166,12 @@ class BaseViewController: UIViewController {
 extension BaseViewController: UIDocumentPickerDelegate {
 
         func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+            
+            DispatchQueue.main.async {
+                self.activityIndicatorView?.stopAnimating()
+                self.activityIndicatorView?.isHidden = true
+            }
+            
             #if targetEnvironment(macCatalyst)
             
             if let vc = children.first as? PageViewController {
@@ -186,6 +192,7 @@ extension BaseViewController: UIDocumentPickerDelegate {
                 }
             }
             #endif
+
         }
         
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
@@ -193,9 +200,7 @@ extension BaseViewController: UIDocumentPickerDelegate {
                 DispatchQueue.main.async {
                     do {
                         let archiver = try Archiver(url, identifier: url.absoluteString.digest(type: .sha256))
-    //                    self.archiver?.read(at: self.pageViewController.page)
-                        
-                        
+
                         let userActivity = NSUserActivity(activityType: "reader")
                         userActivity.title = "Restore Item"
                         
@@ -238,10 +243,6 @@ extension BaseViewController {
     
     override func validate(_ command: UICommand) {
         if let dict = command.propertyList as? [String: String] {
-            
-            print(command)
-            print(dict)
-            
             if dict["PageType"] == "Single" {
                 if pageType == .single {
                     command.state = .on
@@ -270,7 +271,6 @@ extension BaseViewController {
             }
         }
     }
-    
     
     override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
         if action == #selector(open(_:)) {
@@ -309,6 +309,7 @@ extension BaseViewController {
     @objc func open(_ sender: UICommand) {
         openPicker()
     }
+
     @objc func openAsANewWindow(_ sender: UICommand) {
         let userActivity = NSUserActivity(
           activityType: "com.sonson.multiwindow"

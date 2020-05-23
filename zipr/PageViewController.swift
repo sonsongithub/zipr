@@ -139,11 +139,7 @@ class PageViewController: UIPageViewController {
         case .single:
             let vc = SinglePageViewController(nibName: nil, bundle: nil)
             vc.page = nextPage
-            if let archiver = archiver {
-                vc.identifier = archiver.identifier
-                print(page)
-                archiver.read(at: page + 1)
-            }
+            vc.archiver = archiver
             return vc
         case .spread:
             let vc = SpreadPageViewController(nibName: nil, bundle: nil)
@@ -151,21 +147,12 @@ class PageViewController: UIPageViewController {
                 vc.page = nextPage
                 vc.leftPage = nextPage + 1
                 vc.rightPage = nextPage
-                if let archiver = archiver {
-                    vc.identifier = archiver.identifier
-                    archiver.read(at: vc.leftPage)
-                    archiver.read(at: vc.rightPage)
-                }
+                vc.archiver = archiver
             } else if pageDirection == .right {
                 vc.page = nextPage
                 vc.leftPage = nextPage
                 vc.rightPage = nextPage + 1
-                
-                if let archiver = archiver {
-                    vc.identifier = archiver.identifier
-                    archiver.read(at: vc.leftPage)
-                    archiver.read(at: vc.rightPage)
-                }
+                vc.archiver = archiver
             }
             return vc
         }

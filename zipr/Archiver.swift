@@ -190,7 +190,7 @@ class Archiver {
 
         queue.async {
             do {
-                Thread.sleep(forTimeInterval: 1)
+//                Thread.sleep(forTimeInterval: 1)
                 var d = Data()
                 
                 _ = try self.archive.extract(tempCurrentTask.entry, bufferSize: 20480, skipCRC32: true, progress: tempCurrentTask.progress, consumer: { (data) in

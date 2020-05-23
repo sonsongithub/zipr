@@ -18,7 +18,8 @@ class SpreadPageViewController: UIViewController {
     let rightImageView = UIImageView(frame: .zero)
     
     var page: Int = 0
-    var identifier = ""
+    
+    var archiver: Archiver?
     
     var leftPage: Int = 0 {
         didSet {
@@ -31,6 +32,14 @@ class SpreadPageViewController: UIViewController {
             rightLabel.text = String(format: "%d", rightPage)
         }
         
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if let archiver = self.archiver {
+            archiver.read(at: leftPage)
+            archiver.read(at: rightPage)
+        }
     }
     
     override func viewDidLoad() {
@@ -111,12 +120,14 @@ class SpreadPageViewController: UIViewController {
         }
         
         DispatchQueue.main.async {
-            if sent_identifier == self.identifier {
-                if self.leftPage == page {
-                    self.leftImageView.image = image
-                }
-                if self.rightPage == page {
-                    self.rightImageView.image = image
+            if let identifier = self.archiver?.identifier {
+                if sent_identifier == identifier {
+                    if self.leftPage == page {
+                        self.leftImageView.image = image
+                    }
+                    if self.rightPage == page {
+                        self.rightImageView.image = image
+                    }
                 }
             }
         }
