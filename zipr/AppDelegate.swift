@@ -27,17 +27,60 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
 #if targetEnvironment(macCatalyst)
+    
     override func buildMenu(with builder: UIMenuBuilder) {
         
         if builder.system == UIMenuSystem.main {
             builder.remove(menu: .format)
             builder.remove(menu: .edit)
+            builder.insertChild(AppDelegate.viewToggleMenu(), atStartOfMenu: .view)
             builder.insertChild(AppDelegate.viewMenu(), atStartOfMenu: .view)
             builder.insertSibling(AppDelegate.openMenu(), afterMenu: .newScene)
         }
         
         super.buildMenu(with: builder)
-        // TODO: build your menu
+    }
+    
+    class func viewToggleMenu() -> UIMenu {
+        
+        var children: [UIKeyCommand] = []
+        
+        let commandSwitchToSingle = UIKeyCommand(title: NSLocalizedString("Single", comment: ""),
+                         image: nil,
+                         action: #selector(BaseViewController.commandSwitchToSingle(_:)),
+                         input: "S",
+                         modifierFlags: [.command],
+                         propertyList: ["PageType": "Single"])
+        children.append(commandSwitchToSingle)
+        let commandSwitchToSpread = UIKeyCommand(title: NSLocalizedString("Spread", comment: ""),
+                         image: nil,
+                         action: #selector(BaseViewController.commandSwitchToSpread(_:)),
+                         input: "P",
+                         modifierFlags: [.command],
+                         propertyList: ["PageType": "Spread"])
+        children.append(commandSwitchToSpread)
+        
+        let commandSwitchToLeftDirection = UIKeyCommand(title: NSLocalizedString("To Left", comment: ""),
+                         image: nil,
+                         action: #selector(BaseViewController.commandSwitchToLeftDirection(_:)),
+                         input: UIKeyCommand.inputLeftArrow,
+                         modifierFlags: [.command],
+                         propertyList: ["PageDirection": "Left"])
+        children.append(commandSwitchToLeftDirection)
+        
+        let commandSwitchToRightDirection = UIKeyCommand(title: NSLocalizedString("To Right", comment: ""),
+                         image: nil,
+                         action: #selector(BaseViewController.commandSwitchToRightDirection(_:)),
+                         input: UIKeyCommand.inputRightArrow,
+                         modifierFlags: [.command],
+                         propertyList: ["PageDirection": "Right"])
+        children.append(commandSwitchToRightDirection)
+        
+        return UIMenu(title: "",
+                   image: nil,
+                   identifier: UIMenu.Identifier("com.sonson.zipr.menus.viewMenu2"),
+                   options: .displayInline,
+                   children: children)
     }
     
     class func viewMenu() -> UIMenu {

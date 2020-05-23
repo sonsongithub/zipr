@@ -25,25 +25,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
         guard let _ = (scene as? UIWindowScene) else { return }
-        
-        
-        guard let baseVC = self.window?.rootViewController as? BaseViewController else {
-            return
-        }
-        
-        #if targetEnvironment(macCatalyst)
-            if let windowScene = scene as? UIWindowScene {
-                if let titlebar = windowScene.titlebar {
-                    
-                    let toolbar = NSToolbar(identifier: "testToolbar")
-                    toolbar.delegate = baseVC
-                    toolbar.allowsUserCustomization = false
-                    toolbar.centeredItemIdentifier = NSToolbarItem.Identifier(rawValue: "testGroup")
-                    titlebar.toolbar = toolbar
-                    titlebar.titleVisibility = .hidden
-                }
-            }
-        #endif
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {

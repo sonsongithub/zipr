@@ -218,6 +218,43 @@ extension BaseViewController: UIDocumentPickerDelegate {
 #if targetEnvironment(macCatalyst)
 extension BaseViewController {
     
+    override func validate(_ command: UICommand) {
+        if let dict = command.propertyList as? [String: String] {
+            
+            print(command)
+            print(dict)
+            
+            if dict["PageType"] == "Single" {
+                if pageType == .single {
+                    command.state = .on
+                } else {
+                    command.state = .off
+                }
+            } else if dict["PageType"] == "Spread" {
+                if pageType == .single {
+                    command.state = .off
+                } else {
+                    command.state = .on
+                }
+            }
+        
+            if dict["PageDirection"] == "Left" {
+                if pageDirection == .left {
+                    command.state = .on
+                } else {
+                    command.state = .off
+                }
+            } else if dict["PageDirection"] == "Right" {
+                if pageDirection == .left {
+                    command.state = .off
+                } else {
+                    command.state = .on
+                }
+            }
+        }
+    }
+    
+    
     override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
         if action == #selector(open(_:)) {
             return true
@@ -235,6 +272,18 @@ extension BaseViewController {
             return true
         }
         if action == #selector(commandShiftPageRight(_:)) {
+            return true
+        }
+        if action == #selector(commandSwitchToSingle(_:)) {
+            return true
+        }
+        if action == #selector(commandSwitchToSpread(_:)) {
+            return true
+        }
+        if action == #selector(commandSwitchToLeftDirection(_:)) {
+            return true
+        }
+        if action == #selector(commandSwitchToRightDirection(_:)) {
             return true
         }
         return false
@@ -261,6 +310,20 @@ extension BaseViewController {
     }
     
     @objc func commandShiftPageRight(_ sender: UICommand) {
+    }
+    
+    @objc func commandSwitchToSingle(_ sender: UICommand) {
+        toggleSingle()
+    }
+    
+    @objc func commandSwitchToSpread(_ sender: UICommand) {
+        toggleSpread()
+    }
+    
+    @objc func commandSwitchToLeftDirection(_ sender: UICommand) {
+    }
+    
+    @objc func commandSwitchToRightDirection(_ sender: UICommand) {
     }
 }
 #endif
