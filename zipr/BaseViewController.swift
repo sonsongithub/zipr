@@ -66,8 +66,6 @@ class BaseViewController: UIViewController {
         self.edgesForExtendedLayout = []
         openPicker()
         
-        titleBarHidden = false
-
         let tapGesture:UITapGestureRecognizer = UITapGestureRecognizer(
         target: self,
         action: #selector(BaseViewController.tapped(_:)))
@@ -79,11 +77,6 @@ class BaseViewController: UIViewController {
         if sender.state == .ended {
             titleBarHidden = !titleBarHidden
         }
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-//        openPicker()
     }
     
     func toggleSpread() {
@@ -157,6 +150,13 @@ extension BaseViewController: UIDocumentPickerDelegate {
 
         func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
             #if targetEnvironment(macCatalyst)
+            
+            if let vc = children.first as? PageViewController {
+                if vc.archiver != nil {
+                    return
+                }
+            }
+            
             UIApplication.shared.connectedScenes.forEach { (scene) in
                 if let uiscene = scene as? UIWindowScene {
                     uiscene.windows.forEach { (window) in
@@ -237,7 +237,6 @@ extension BaseViewController {
                     command.state = .on
                 }
             }
-        
             if dict["PageDirection"] == "Left" {
                 if pageDirection == .left {
                     command.state = .on
@@ -301,15 +300,27 @@ extension BaseViewController {
     }
     
     @objc func commnadPageLeft(_ sender: UICommand) {
+        if let vc = self.children.first as? PageViewController {
+            vc.pageLeft()
+        }
     }
     
     @objc func commandPageRight(_ sender: UICommand) {
+        if let vc = self.children.first as? PageViewController {
+            vc.pageRight()
+        }
     }
     
     @objc func commandShiftPageLeft(_ sender: UICommand) {
+        if let vc = self.children.first as? PageViewController {
+            vc.shiftPageLeft()
+        }
     }
     
     @objc func commandShiftPageRight(_ sender: UICommand) {
+        if let vc = self.children.first as? PageViewController {
+            vc.shiftPageRight()
+        }
     }
     
     @objc func commandSwitchToSingle(_ sender: UICommand) {
@@ -321,9 +332,11 @@ extension BaseViewController {
     }
     
     @objc func commandSwitchToLeftDirection(_ sender: UICommand) {
+        toggleToLeft()
     }
     
     @objc func commandSwitchToRightDirection(_ sender: UICommand) {
+        toggleToRight()
     }
 }
 #endif
