@@ -34,13 +34,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         #if targetEnvironment(macCatalyst)
             if let windowScene = scene as? UIWindowScene {
                 if let titlebar = windowScene.titlebar {
+                    
                     let toolbar = NSToolbar(identifier: "testToolbar")
                     toolbar.delegate = baseVC
                     toolbar.allowsUserCustomization = false
                     toolbar.centeredItemIdentifier = NSToolbarItem.Identifier(rawValue: "testGroup")
-                    titlebar.titleVisibility = .hidden
-
                     titlebar.toolbar = toolbar
+                    titlebar.titleVisibility = .hidden
                 }
             }
         #endif

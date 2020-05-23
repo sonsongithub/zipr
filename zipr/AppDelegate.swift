@@ -32,36 +32,63 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if builder.system == UIMenuSystem.main {
             builder.remove(menu: .format)
             builder.remove(menu: .edit)
-            
-            builder.insertChild(AppDelegate.openMenu(), atStartOfMenu: .file)
+            builder.insertChild(AppDelegate.viewMenu(), atStartOfMenu: .view)
+            builder.insertSibling(AppDelegate.openMenu(), afterMenu: .newScene)
         }
         
         super.buildMenu(with: builder)
         // TODO: build your menu
     }
     
+    class func viewMenu() -> UIMenu {
+        let commandPageRight = UIKeyCommand(title: NSLocalizedString("Page Right", comment: ""),
+                         image: nil,
+                         action: #selector(BaseViewController.commandPageRight(_:)),
+                         input: UIKeyCommand.inputRightArrow,
+                         modifierFlags: [],
+                         propertyList: nil)
+        let commnadPageLeft = UIKeyCommand(title: NSLocalizedString("Page Left", comment: ""),
+                         image: nil,
+                         action: #selector(BaseViewController.commnadPageLeft(_:)),
+                         input: UIKeyCommand.inputLeftArrow,
+                         modifierFlags: [],
+                         propertyList: nil)
+        
+        let commandShiftPageRight = UIKeyCommand(title: NSLocalizedString("Shift One Page Right", comment: ""),
+                         image: nil,
+                         action: #selector(BaseViewController.commandShiftPageRight(_:)),
+                         input: UIKeyCommand.inputRightArrow,
+                         modifierFlags: .alternate,
+                         propertyList: nil)
+        
+        let commandShiftPageLeft = UIKeyCommand(title: NSLocalizedString("Shift One Page Left", comment: ""),
+                         image: nil,
+                         action: #selector(BaseViewController.commandShiftPageLeft(_:)),
+                         input: UIKeyCommand.inputLeftArrow,
+                         modifierFlags: .alternate,
+                         propertyList: nil)
+        return UIMenu(title: "",
+                   image: nil,
+                   identifier: UIMenu.Identifier("com.sonson.zipr.menus.viewMenu"),
+                   options: .displayInline,
+                   children: [commnadPageLeft, commandPageRight, commandShiftPageLeft, commandShiftPageRight])
+    }
+    
     class func openMenu() -> UIMenu {
         let openCommand =
-            UIKeyCommand(title: NSLocalizedString("OpenTitle", comment: ""),
+            UIKeyCommand(title: NSLocalizedString("Open...", comment: ""),
                          image: nil,
-                         action: #selector(BaseViewController.newAction(_:)),
+                         action: #selector(BaseViewController.open(_:)),
                          input: "O",
                          modifierFlags: .command,
                          propertyList: nil)
-        
-        let openNewWindowCommand =
-            UIKeyCommand(title: NSLocalizedString("OpenTitle2", comment: ""),
-                         image: nil,
-                         action: #selector(BaseViewController.newAction2(_:)),
-                         input: "O",
-                         modifierFlags: [.command, .shift],
-                         propertyList: nil)
+
         let openMenu =
             UIMenu(title: "",
                    image: nil,
-                   identifier: UIMenu.Identifier("com.example.apple-samplecode.menus.openMenu"),
+                   identifier: UIMenu.Identifier("com.sonson.zipr.menus.openMenu"),
                    options: .displayInline,
-                   children: [openCommand, openNewWindowCommand])
+                   children: [openCommand])
         return openMenu
     }
 #endif

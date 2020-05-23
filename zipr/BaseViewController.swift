@@ -10,7 +10,7 @@ import Foundation
 import UIKit
 import ZIPFoundation
 
-class BaseViewController: UIViewController, UIDocumentPickerDelegate {
+class BaseViewController: UIViewController {
     @IBOutlet var activityIndicatorView: UIActivityIndicatorView? = nil
     
     var page: Int = 0
@@ -19,53 +19,66 @@ class BaseViewController: UIViewController, UIDocumentPickerDelegate {
     var pageDirection: PageDirection = .left
 
     #if targetEnvironment(macCatalyst)
-        var selectStyleToolbar: NSToolbarItemGroup?
-        var selectDirectionToolbar: NSToolbarItemGroup?
+    var selectStyleToolbar: NSToolbarItemGroup?
+    var selectDirectionToolbar: NSToolbarItemGroup?
+    #endif
+    
+    func getCurrentScene() -> UIWindowScene? {
+        return UIApplication.shared.connectedScenes.compactMap { (scene) -> UIWindowScene? in
+            return scene as? UIWindowScene
+        }
+        .first { (scene) -> Bool in
+            let candidate = scene.windows.first { (window) -> Bool in
+                return (window.rootViewController == self)
+            }
+            return (candidate != nil)
+        }
+    }
+
+    #if targetEnvironment(macCatalyst)
+    var titleBarHidden: Bool {
+        get {
+            if let windowScene = getCurrentScene() {
+                return (windowScene.titlebar?.toolbar == nil)
+            }
+            return false
+        }
+        set {
+            if let windowScene = getCurrentScene() {
+                guard newValue != (windowScene.titlebar?.toolbar == nil) else { return }
+                if newValue {
+                    windowScene.titlebar?.toolbar = nil
+                } else {
+                    let toolbar = NSToolbar(identifier: "testToolbar")
+                    toolbar.delegate = self
+                    toolbar.allowsUserCustomization = false
+                    toolbar.centeredItemIdentifier = NSToolbarItem.Identifier(rawValue: "testGroup")
+                    windowScene.titlebar?.toolbar = toolbar
+                    windowScene.titlebar?.titleVisibility = .hidden
+                }
+            }
+        }
+    }
     #endif
     
     override func viewDidLoad() {
         super.viewDidLoad()
         self.edgesForExtendedLayout = []
         openPicker()
-//        self.view.window?.windowScene.to
+        
+        titleBarHidden = false
 
-        #if targetEnvironment(macCatalyst)
-        UIApplication.shared.connectedScenes.forEach { (scene) in
-            if let uiscene = scene as? UIWindowScene {
-                print(uiscene.windows.count)
-//                if uiscene.activationState == .foregroundActive {
-                    uiscene.windows.forEach { (window) in
-                        if window.rootViewController == self {
-                            print("find")
-                            uiscene.titlebar?.titleVisibility = .hidden
-                            uiscene.titlebar?.toolbar = nil
-                        }
-                    }
-//                }
-            }
-        }
-        #endif
         let tapGesture:UITapGestureRecognizer = UITapGestureRecognizer(
         target: self,
         action: #selector(BaseViewController.tapped(_:)))
             
         self.view.addGestureRecognizer(tapGesture)
-//        if let a = self.view.window {
-//            print(a)
-//        }
-//
-//        if let titlebar = self.view.window?.windowScene?.titlebar {
-//            titlebar.titleVisibility = .visible
-//        }
     }
     
     @objc func tapped(_ sender: UITapGestureRecognizer){
         if sender.state == .ended {
-            
-            let pos = sender.location(in: self.view)
-            print(pos)
+            titleBarHidden = !titleBarHidden
         }
-        
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -77,8 +90,8 @@ class BaseViewController: UIViewController, UIDocumentPickerDelegate {
         pageType = .spread
         updatePageView()
         #if targetEnvironment(macCatalyst)
-            selectStyleToolbar?.setSelected(true, at: 0)
-            selectStyleToolbar?.setSelected(false, at: 1)
+        selectStyleToolbar?.setSelected(true, at: 0)
+        selectStyleToolbar?.setSelected(false, at: 1)
         #endif
     }
     
@@ -86,8 +99,8 @@ class BaseViewController: UIViewController, UIDocumentPickerDelegate {
         pageType = .single
         updatePageView()
         #if targetEnvironment(macCatalyst)
-            selectStyleToolbar?.setSelected(false, at: 0)
-            selectStyleToolbar?.setSelected(true, at: 1)
+        selectStyleToolbar?.setSelected(false, at: 0)
+        selectStyleToolbar?.setSelected(true, at: 1)
         #endif
     }
     
@@ -95,8 +108,8 @@ class BaseViewController: UIViewController, UIDocumentPickerDelegate {
         pageDirection = .right
         updatePageView()
         #if targetEnvironment(macCatalyst)
-            selectDirectionToolbar?.setSelected(false, at: 0)
-            selectDirectionToolbar?.setSelected(true, at: 1)
+        selectDirectionToolbar?.setSelected(false, at: 0)
+        selectDirectionToolbar?.setSelected(true, at: 1)
         #endif
     }
     
@@ -104,99 +117,13 @@ class BaseViewController: UIViewController, UIDocumentPickerDelegate {
         pageDirection = .left
         updatePageView()
         #if targetEnvironment(macCatalyst)
-            selectDirectionToolbar?.setSelected(true, at: 0)
-            selectDirectionToolbar?.setSelected(false, at: 1)
+        selectDirectionToolbar?.setSelected(true, at: 0)
+        selectDirectionToolbar?.setSelected(false, at: 1)
         #endif
     }
-
-//    func setViewController(flag: Bool) {
-//
-////        if let archiver = self.archiver {
-//            let vc = PageViewController(archiver: archiver, page: 0, pageDirection: .right, pageType: .spread)
-//            self.addChild(vc)
-//            vc.view.frame = self.view.bounds
-//            self.view.addSubview(vc.view)
-//            vc.didMove(toParent: self)
-////        }
-//    }
     
-    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-        print(urls)
-        
-//        guard let identifider = self.children.first?.userActivity?.persistentIdentifier else {
-//            return
-//        }
-        
-        if let url = urls.first {
-            DispatchQueue.main.async {
-                do {
-                    let archiver = try Archiver(url, identifier: "a")
-//                    self.archiver?.read(at: self.pageViewController.page)
-                    
-                    let userActivity = NSUserActivity(activityType: "reader")
-                    userActivity.title = "Restore Item"
-                    
-                    let state: [String: URL] = ["URL": archiver.url]
-                    userActivity.addUserInfoEntries(from: state)
-                    
-                    self.view.window?.windowScene?.userActivity = userActivity
-
-                    if let child = self.children.first {
-                        child.view.removeFromSuperview()
-                        child.removeFromParent()
-
-                    }
-                    let vc = PageViewController(archiver: archiver, page: self.page, pageDirection: self.pageDirection, pageType: self.pageType)
-                    self.addChild(vc)
-                    vc.view.frame = self.view.bounds
-                    self.view.addSubview(vc.view)
-                    vc.didMove(toParent: self)
-                    
-                } catch let error as NSError {
-                    print(error)
-                } catch {
-                    print("unknown error")
-                }
-                DispatchQueue.main.async {
-                    self.activityIndicatorView?.stopAnimating()
-                    self.activityIndicatorView?.isHidden = true
-                }
-            }
-        } else {
-            self.activityIndicatorView?.stopAnimating()
-            self.activityIndicatorView?.isHidden = true
-        }
-        
-    }
-    
-    override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
-        if action == #selector(newAction(_:)) {
-            return true
-        }
-        if action == #selector(newAction2(_:)) {
-            return true
-        }
-        return false
-    }
-    
-    @objc
-    // User chose "New" sub menu command from the File menu (New Date or Text item).
-    func newAction(_ sender: UICommand) {
-        openPicker()
-    }
-    @objc
-    // User chose "New" sub menu command from the File menu (New Date or Text item).
-    func newAction2(_ sender: UICommand) {
-        let userActivity = NSUserActivity(
-          activityType: "com.sonson.multiwindow"
-        )
-        
-        UIApplication.shared.requestSceneSessionActivation(nil, userActivity: userActivity, options: nil, errorHandler: nil)
-    }
     
     func openPicker() {
-        
-        
         
         self.activityIndicatorView?.isHidden = false
         self.activityIndicatorView?.startAnimating()
@@ -226,6 +153,117 @@ class BaseViewController: UIViewController, UIDocumentPickerDelegate {
     
 }
 
+extension BaseViewController: UIDocumentPickerDelegate {
+
+        func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+            #if targetEnvironment(macCatalyst)
+            UIApplication.shared.connectedScenes.forEach { (scene) in
+                if let uiscene = scene as? UIWindowScene {
+                    uiscene.windows.forEach { (window) in
+                        if window.rootViewController == self {
+                            UIApplication.shared.requestSceneSessionDestruction(uiscene.session, options: .none) { (error) in
+                                print(error)
+                            }
+                        }
+                    }
+                }
+            }
+            #endif
+        }
+        
+        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+            if let url = urls.first {
+                DispatchQueue.main.async {
+                    do {
+                        let archiver = try Archiver(url, identifier: "a")
+    //                    self.archiver?.read(at: self.pageViewController.page)
+                        
+                        let userActivity = NSUserActivity(activityType: "reader")
+                        userActivity.title = "Restore Item"
+                        
+                        let state: [String: URL] = ["URL": archiver.url]
+                        userActivity.addUserInfoEntries(from: state)
+                        
+                        self.view.window?.windowScene?.userActivity = userActivity
+
+                        if let child = self.children.first {
+                            child.view.removeFromSuperview()
+                            child.removeFromParent()
+
+                        }
+                        let vc = PageViewController(archiver: archiver, page: self.page, pageDirection: self.pageDirection, pageType: self.pageType)
+                        self.addChild(vc)
+                        vc.view.frame = self.view.bounds
+                        self.view.addSubview(vc.view)
+                        vc.didMove(toParent: self)
+                        
+                    } catch let error as NSError {
+                        print(error)
+                    } catch {
+                        print("unknown error")
+                    }
+                    DispatchQueue.main.async {
+                        self.activityIndicatorView?.stopAnimating()
+                        self.activityIndicatorView?.isHidden = true
+                    }
+                }
+            } else {
+                self.activityIndicatorView?.stopAnimating()
+                self.activityIndicatorView?.isHidden = true
+            }
+            
+        }
+}
+
+#if targetEnvironment(macCatalyst)
+extension BaseViewController {
+    
+    override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+        if action == #selector(open(_:)) {
+            return true
+        }
+        if action == #selector(openAsANewWindow(_:)) {
+            return true
+        }
+        if action == #selector(commnadPageLeft(_:)) {
+            return true
+        }
+        if action == #selector(commandPageRight(_:)) {
+            return true
+        }
+        if action == #selector(commandShiftPageLeft(_:)) {
+            return true
+        }
+        if action == #selector(commandShiftPageRight(_:)) {
+            return true
+        }
+        return false
+    }
+    
+    @objc func open(_ sender: UICommand) {
+        openPicker()
+    }
+    @objc func openAsANewWindow(_ sender: UICommand) {
+        let userActivity = NSUserActivity(
+          activityType: "com.sonson.multiwindow"
+        )
+        
+        UIApplication.shared.requestSceneSessionActivation(nil, userActivity: userActivity, options: nil, errorHandler: nil)
+    }
+    
+    @objc func commnadPageLeft(_ sender: UICommand) {
+    }
+    
+    @objc func commandPageRight(_ sender: UICommand) {
+    }
+    
+    @objc func commandShiftPageLeft(_ sender: UICommand) {
+    }
+    
+    @objc func commandShiftPageRight(_ sender: UICommand) {
+    }
+}
+#endif
 
 #if targetEnvironment(macCatalyst)
 extension BaseViewController: NSToolbarDelegate {
@@ -285,9 +323,6 @@ extension BaseViewController: NSToolbarDelegate {
             
             return item
         }
-        
-        
-
         return nil
     }
     
