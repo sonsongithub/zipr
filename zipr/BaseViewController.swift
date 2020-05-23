@@ -392,14 +392,14 @@ extension BaseViewController: NSToolbarDelegate {
     @objc func didPushLeft(sender: NSToolbarItemGroup) {
         print("didPushLeft")
         if let vc = self.children.first as? PageViewController {
-            vc.pageToLeftByAPage()
+            vc.shiftPageLeft()
         }
     }
     
     @objc func didPushRight(sender: NSToolbarItemGroup) {
         print("didPushRight")
         if let vc = self.children.first as? PageViewController {
-            vc.pageToRightByAPage()
+            vc.shiftPageRight()
         }
     }
     

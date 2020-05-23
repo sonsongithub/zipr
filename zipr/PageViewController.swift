@@ -19,7 +19,7 @@ enum PageType {
     case spread
 }
 
-class PageViewController: UIPageViewController, UIPageViewControllerDelegate, UIPageViewControllerDataSource {
+class PageViewController: UIPageViewController {
     
     var archiver: Archiver?
     
@@ -36,7 +36,7 @@ class PageViewController: UIPageViewController, UIPageViewControllerDelegate, UI
         super.init(coder: coder)
     }
     
-    func leftNextViewController(pageType: PageType, pageDirection: PageDirection, page: Int) -> (UIViewController, Int)? {
+    func viewControllerForPageLeft(pageType: PageType, pageDirection: PageDirection, page: Int) -> (UIViewController, Int)? {
         
         var nextPage = 0
 
@@ -60,7 +60,7 @@ class PageViewController: UIPageViewController, UIPageViewControllerDelegate, UI
         return (vc, nextPage)
     }
     
-    func rightNextViewController(pageType: PageType, pageDirection: PageDirection, page: Int) -> (UIViewController, Int)? {
+    func viewControllerForPageRight(pageType: PageType, pageDirection: PageDirection, page: Int) -> (UIViewController, Int)? {
         
         var nextPage = 0
         
@@ -84,7 +84,7 @@ class PageViewController: UIPageViewController, UIPageViewControllerDelegate, UI
         return (vc, nextPage)
     }
     
-    func leftNextOneByOnePageViewController(pageType: PageType, pageDirection: PageDirection, page: Int) -> (UIViewController, Int)? {
+    func viewControllerForShiftPageLeft(pageType: PageType, pageDirection: PageDirection, page: Int) -> (UIViewController, Int)? {
         
         var nextPage = 0
 
@@ -108,7 +108,7 @@ class PageViewController: UIPageViewController, UIPageViewControllerDelegate, UI
         return (vc, nextPage)
     }
     
-    func rightNextOneByOnePageViewController(pageType: PageType, pageDirection: PageDirection, page: Int) -> (UIViewController, Int)? {
+    func viewControllerForShiftPageRight(pageType: PageType, pageDirection: PageDirection, page: Int) -> (UIViewController, Int)? {
         
         var nextPage = 0
 
@@ -189,6 +189,11 @@ class PageViewController: UIPageViewController, UIPageViewControllerDelegate, UI
         let vc = createChildViewController(self.page)
         self.setViewControllers([vc], direction: .forward, animated: false, completion: nil)
     }
+}
+
+#if targetEnvironment(macCatalyst)
+#else
+extension PageViewController {
     
     override var keyCommands: [UIKeyCommand]? {
         let commands = [
@@ -249,48 +254,25 @@ class PageViewController: UIPageViewController, UIPageViewControllerDelegate, UI
         print("handlePaging")
         if command.modifierFlags.contains(.alternate) {
             if command.input == UIKeyCommand.inputLeftArrow {
-                pageToLeftByAPage()
+                shiftPageLeft()
             }
             if command.input == UIKeyCommand.inputRightArrow {
-                pageToRightByAPage()
+                shiftPageRight()
             }
         } else {
             if command.input == UIKeyCommand.inputLeftArrow {
-                pageToLeft()
+                pageLeft()
             }
             if command.input == UIKeyCommand.inputRightArrow {
-                pageToRight()
+                pageRight()
             }
         }
     }
-    
-    func pageToLeft() {
-        if let (vc, nextPage) = leftNextViewController(pageType: pageType, pageDirection: pageDirection, page: page) {
-            page = nextPage
-            self.setViewControllers([vc], direction: .reverse, animated: true, completion: nil)
-        }
-    }
-    
-    func pageToRight() {
-        if let (vc, nextPage) = rightNextViewController(pageType: pageType, pageDirection: pageDirection, page: page) {
-            page = nextPage
-            self.setViewControllers([vc], direction: .forward, animated: true, completion: nil)
-        }
-    }
-    
-    func pageToLeftByAPage() {
-        if let (vc, nextPage) = leftNextOneByOnePageViewController(pageType: pageType, pageDirection: pageDirection, page: page) {
-            page = nextPage
-            self.setViewControllers([vc], direction: .reverse, animated: (pageType == .single), completion: nil)
-        }
-    }
-    
-    func pageToRightByAPage() {
-        if let (vc, nextPage) = rightNextOneByOnePageViewController(pageType: pageType, pageDirection: pageDirection, page: page) {
-            page = nextPage
-            self.setViewControllers([vc], direction: .forward, animated: (pageType == .single), completion: nil)
-        }
-    }
+}
+
+#endif
+
+extension PageViewController: UIPageViewControllerDelegate, UIPageViewControllerDataSource {
     
     func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
         if completed {
@@ -303,17 +285,47 @@ class PageViewController: UIPageViewController, UIPageViewControllerDelegate, UI
     }
     
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
-        if let (vc, _) = leftNextViewController(pageType: pageType, pageDirection: pageDirection, page: page) {
+        if let (vc, _) = viewControllerForPageLeft(pageType: pageType, pageDirection: pageDirection, page: page) {
             return vc
         }
         return nil
     }
     
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
-        if let (vc, _) = rightNextViewController(pageType: pageType, pageDirection: pageDirection, page: page) {
+        if let (vc, _) = viewControllerForPageRight(pageType: pageType, pageDirection: pageDirection, page: page) {
             return vc
         }
         return nil
     }
     
+}
+
+extension PageViewController {
+    func pageLeft() {
+        if let (vc, nextPage) = viewControllerForPageLeft(pageType: pageType, pageDirection: pageDirection, page: page) {
+            page = nextPage
+            self.setViewControllers([vc], direction: .reverse, animated: true, completion: nil)
+        }
+    }
+    
+    func pageRight() {
+        if let (vc, nextPage) = viewControllerForPageRight(pageType: pageType, pageDirection: pageDirection, page: page) {
+            page = nextPage
+            self.setViewControllers([vc], direction: .forward, animated: true, completion: nil)
+        }
+    }
+    
+    func shiftPageLeft() {
+        if let (vc, nextPage) = viewControllerForShiftPageLeft(pageType: pageType, pageDirection: pageDirection, page: page) {
+            page = nextPage
+            self.setViewControllers([vc], direction: .reverse, animated: (pageType == .single), completion: nil)
+        }
+    }
+    
+    func shiftPageRight() {
+        if let (vc, nextPage) = viewControllerForShiftPageRight(pageType: pageType, pageDirection: pageDirection, page: page) {
+            page = nextPage
+            self.setViewControllers([vc], direction: .forward, animated: (pageType == .single), completion: nil)
+        }
+    }
 }
