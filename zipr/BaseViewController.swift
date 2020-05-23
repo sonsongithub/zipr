@@ -75,7 +75,24 @@ class BaseViewController: UIViewController {
     
     @objc func tapped(_ sender: UITapGestureRecognizer){
         if sender.state == .ended {
-            titleBarHidden = !titleBarHidden
+            let tap = sender.location(in: self.view)
+            
+            let tapAreaWidthRatio = CGFloat(0.2)
+            let tapAreaHeightRatio = CGFloat(0.9)
+            
+            let leftArea = CGRect(x: 0, y: self.view.bounds.height * (1 - tapAreaHeightRatio) * 0.5, width: self.view.bounds.width * tapAreaWidthRatio, height: self.view.bounds.height * tapAreaHeightRatio)
+            let rightArea = CGRect(x: self.view.bounds.width * (1 - tapAreaWidthRatio), y: self.view.bounds.height * (1 - tapAreaHeightRatio) * 0.5, width: self.view.bounds.width * tapAreaWidthRatio, height: self.view.bounds.height * tapAreaHeightRatio)
+            
+            if leftArea.contains(tap) {
+                if let vc = self.children.first as? PageViewController {
+                    vc.pageLeft()
+                }
+            } else if rightArea.contains(tap) {
+                if let vc = self.children.first as? PageViewController {
+                    vc.pageRight()                }
+            } else {
+                titleBarHidden = !titleBarHidden
+            }
         }
     }
     
