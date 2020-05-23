@@ -13,6 +13,9 @@ class SinglePageViewController: UIViewController {
     let label = UILabel(frame: .zero)
     let imageView = UIImageView(frame: .zero)
     
+    var identifier = ""
+    var archiver: Archiver?
+    
     var page: Int = 0 {
         didSet {
             label.text = String(format: "%d", page)
@@ -29,6 +32,8 @@ class SinglePageViewController: UIViewController {
         do {
             label.textAlignment = .center
             label.font = UIFont.systemFont(ofSize: 22)
+            
+            label.isHidden = true
             
             /// Instantiate StackView and configure it
             let stackView = UIStackView(frame: .zero)
@@ -88,10 +93,9 @@ class SinglePageViewController: UIViewController {
         }
         
         DispatchQueue.main.async {
-            guard let identifider = self.userActivity?.persistentIdentifier else {
-                return
-            }
-            if sent_identifier == identifider {
+            if sent_identifier == self.identifier {
+                print("self.page", self.page)
+                print("page", page)
                 if self.page == page {
                     self.imageView.image = image
                 }

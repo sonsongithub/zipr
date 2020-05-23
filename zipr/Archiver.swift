@@ -9,6 +9,7 @@
 import Foundation
 import ZIPFoundation
 import UIKit
+import CommonCrypto
 
 class ArchiverTask {
     let progress = Progress()
@@ -189,6 +190,7 @@ class Archiver {
 
         queue.async {
             do {
+                Thread.sleep(forTimeInterval: 1)
                 var d = Data()
                 
                 _ = try self.archive.extract(tempCurrentTask.entry, bufferSize: 20480, skipCRC32: true, progress: tempCurrentTask.progress, consumer: { (data) in
@@ -196,12 +198,14 @@ class Archiver {
                 })
                 
                 if let image = UIImage(data: d) {
+                
                     
                     let userInfo: [String: Any] = [
                         "image": image,
                         "page": tempCurrentTask.page,
                         "identifier": self.identifier
                     ]
+                    print(userInfo)
                     
                     NotificationCenter.default.post(name: Notification.Name("Loaded"), object: nil, userInfo: userInfo)
                 }
@@ -225,7 +229,7 @@ class Archiver {
         }
         
         let entry = entries[index]
-        
+        print(index)
         let task = ArchiverTask(entry, page: index)
         taskQueue.append(task)
         

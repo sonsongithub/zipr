@@ -192,8 +192,9 @@ extension BaseViewController: UIDocumentPickerDelegate {
             if let url = urls.first {
                 DispatchQueue.main.async {
                     do {
-                        let archiver = try Archiver(url, identifier: "a")
+                        let archiver = try Archiver(url, identifier: url.absoluteString.digest(type: .sha256))
     //                    self.archiver?.read(at: self.pageViewController.page)
+                        
                         
                         let userActivity = NSUserActivity(activityType: "reader")
                         userActivity.title = "Restore Item"

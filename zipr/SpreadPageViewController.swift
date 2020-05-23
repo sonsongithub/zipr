@@ -18,6 +18,7 @@ class SpreadPageViewController: UIViewController {
     let rightImageView = UIImageView(frame: .zero)
     
     var page: Int = 0
+    var identifier = ""
     
     var leftPage: Int = 0 {
         didSet {
@@ -46,7 +47,6 @@ class SpreadPageViewController: UIViewController {
         do {
             leftLabel.textAlignment = .center
             leftLabel.font = UIFont.systemFont(ofSize: 22)
-            leftLabel.backgroundColor = .red
             
             rightLabel.textAlignment = .center
             rightLabel.font = UIFont.systemFont(ofSize: 22)
@@ -106,22 +106,19 @@ class SpreadPageViewController: UIViewController {
             return
         }
         
-//        guard let sent_identifier = userInfo["identifier"] as? String else {
-//            return
-//        }
+        guard let sent_identifier = userInfo["identifier"] as? String else {
+            return
+        }
         
         DispatchQueue.main.async {
-//            guard let identifider = self.userActivity?.persistentIdentifier else {
-//                return
-//            }
-//            if sent_identifier == identifider {
+            if sent_identifier == self.identifier {
                 if self.leftPage == page {
                     self.leftImageView.image = image
                 }
                 if self.rightPage == page {
                     self.rightImageView.image = image
                 }
-//            }
+            }
         }
         
     }
