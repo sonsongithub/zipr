@@ -36,7 +36,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         if let window = windowScene.windows.first {
             if let rootViewController = window.rootViewController as? BaseViewController {
-                rootViewController.open(url)
+                rootViewController.open(url: url)
             }
         }
     }

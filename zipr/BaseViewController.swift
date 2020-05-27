@@ -61,7 +61,7 @@ class BaseViewController: UIViewController {
     }
     #endif
     
-    func open(_ url: URL) {
+    func open(url url: URL) {
 
         DispatchQueue.main.async {
             do {
