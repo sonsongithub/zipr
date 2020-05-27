@@ -98,20 +98,16 @@
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <constraints>
-                            <constraint firstAttribute="bottom" secondItem="dIN-7M-osY" secondAttribute="bottom" id="DM8-sT-LWO"/>
                             <constraint firstItem="dIN-7M-osY" firstAttribute="leading" secondItem="fV7-pL-H8v" secondAttribute="leading" id="KT0-nY-Dey"/>
                             <constraint firstItem="dIN-7M-osY" firstAttribute="trailing" secondItem="fV7-pL-H8v" secondAttribute="trailing" id="OwN-tl-MMQ"/>
-                            <constraint firstItem="dIN-7M-osY" firstAttribute="trailing" secondItem="fV7-pL-H8v" secondAttribute="trailing" id="Xo1-z5-M85"/>
-                            <constraint firstItem="dIN-7M-osY" firstAttribute="leading" secondItem="fV7-pL-H8v" secondAttribute="leading" id="aAH-am-UZk"/>
                             <constraint firstItem="dIN-7M-osY" firstAttribute="top" secondItem="fV7-pL-H8v" secondAttribute="top" id="ixD-LE-298"/>
                             <constraint firstItem="RdX-7A-rOF" firstAttribute="centerY" secondItem="Wb8-4m-0g3" secondAttribute="centerY" id="okF-jP-WZY"/>
-                            <constraint firstAttribute="bottom" secondItem="dIN-7M-osY" secondAttribute="bottom" id="rDr-o0-Jqt"/>
+                            <constraint firstItem="fV7-pL-H8v" firstAttribute="bottom" secondItem="dIN-7M-osY" secondAttribute="bottom" id="rDr-o0-Jqt"/>
                             <constraint firstItem="RdX-7A-rOF" firstAttribute="centerX" secondItem="Wb8-4m-0g3" secondAttribute="centerX" id="s3G-z0-hq4"/>
-                            <constraint firstItem="dIN-7M-osY" firstAttribute="top" secondItem="Wb8-4m-0g3" secondAttribute="top" id="vQH-Zh-sGP"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="fV7-pL-H8v"/>
                     </view>
-                    <extendedEdge key="edgesForExtendedLayout" bottom="YES"/>
+                    <extendedEdge key="edgesForExtendedLayout"/>
                     <navigationItem key="navigationItem" id="KDc-XP-Onh"/>
                     <connections>
                         <outlet property="activityIndicatorView" destination="RdX-7A-rOF" id="9bq-Hk-OVb"/>

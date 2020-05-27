@@ -61,16 +61,71 @@ class BaseViewController: UIViewController {
     }
     #endif
     
+    func open(_ url: URL) {
+
+        DispatchQueue.main.async {
+            do {
+                let archiver = try Archiver(url, identifier: url.absoluteString.digest(type: .sha256))
+
+                
+                let userActivity = NSUserActivity(activityType: "reader")
+                userActivity.title = "Restore Item"
+                
+                let state: [String: URL] = ["URL": archiver.url]
+                userActivity.addUserInfoEntries(from: state)
+                
+                self.view.window?.windowScene?.userActivity = userActivity
+
+                if let child = self.children.first {
+                    child.view.removeFromSuperview()
+                    child.removeFromParent()
+
+                }
+                let vc = PageViewController(archiver: archiver, page: self.page, pageDirection: self.pageDirection, pageType: self.pageType)
+                self.addChild(vc)
+                vc.view.frame = self.view.bounds
+                self.view.addSubview(vc.view)
+                vc.didMove(toParent: self)
+                
+            } catch let error as NSError {
+                print(error)
+            } catch {
+                print("unknown error")
+            }
+            DispatchQueue.main.async {
+                self.activityIndicatorView?.stopAnimating()
+                self.activityIndicatorView?.isHidden = true
+            }
+        }
+        
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.edgesForExtendedLayout = []
         openPicker()
+        
+        print("----------------------")
+        UIApplication.shared.connectedScenes.forEach { (scene) in
+            if let uiscene = scene as? UIWindowScene {
+                uiscene.windows.forEach { (window) in
+                    if window.rootViewController == self {
+                        print(uiscene.userActivity)
+                        print(uiscene.userActivity?.activityType)
+                        print(uiscene.userActivity?.userInfo)
+                    }
+                }
+            }
+        }
         
         let tapGesture:UITapGestureRecognizer = UITapGestureRecognizer(
         target: self,
         action: #selector(BaseViewController.tapped(_:)))
             
         self.view.addGestureRecognizer(tapGesture)
+        
+        let dropInteraction = UIDropInteraction(delegate: self)
+        view.addInteraction(dropInteraction)
     }
     
     @objc func tapped(_ sender: UITapGestureRecognizer){
@@ -91,7 +146,9 @@ class BaseViewController: UIViewController {
                 if let vc = self.children.first as? PageViewController {
                     vc.pageRight()                }
             } else {
+                #if targetEnvironment(macCatalyst)
                 titleBarHidden = !titleBarHidden
+                #endif
             }
         }
     }
@@ -201,6 +258,7 @@ extension BaseViewController: UIDocumentPickerDelegate {
                     do {
                         let archiver = try Archiver(url, identifier: url.absoluteString.digest(type: .sha256))
 
+                        
                         let userActivity = NSUserActivity(activityType: "reader")
                         userActivity.title = "Restore Item"
                         
@@ -463,3 +521,50 @@ extension BaseViewController: NSToolbarDelegate {
     
 }
 #endif
+
+extension BaseViewController: UIDropInteractionDelegate {
+    func dropInteraction(_ interaction: UIDropInteraction,
+                         canHandle session: UIDropSession) -> Bool {
+        print(session.localDragSession?.localContext)
+        print(session.items)
+        session.items.forEach { (item) in
+            print(item)
+            print(item.itemProvider)
+            print(item.localObject)
+            print(item.itemProvider.hasItemConformingToTypeIdentifier("public.zip-archive"))
+            print(item.itemProvider.canLoadObject(ofClass: URL.self))
+            print(item.itemProvider.canLoadObject(ofClass: String.self))
+        }
+        
+        return true
+    }
+
+    func dropInteraction(_ interaction: UIDropInteraction, sessionDidUpdate session: UIDropSession) -> UIDropProposal {
+        // If a drag comes in, we copy the file. We don't want to consume it.
+        return UIDropProposal(operation: .copy)
+    }
+
+    func dropInteraction(_ interaction: UIDropInteraction, performDrop session: UIDropSession) {
+        print(interaction)
+        
+        if session.hasItemsConforming(toTypeIdentifiers: ["public.zip-archive"]) {
+            session.items.forEach { (item) in
+                item.itemProvider.loadDataRepresentation(forTypeIdentifier: "public.zip-archive") { (data, error) in
+                    if let error = error {
+                        print(error)
+                    }
+                    if let data = data {
+                        print(data.count)
+                    }
+                }
+            }
+        }
+        
+//        // This is called with an array of NSURL
+//    session.loadObjects(ofClass: URL.self) { urls in
+//            for url in urls {
+//                importJSONData(from: url)
+//            }
+//        }
+    }
+}

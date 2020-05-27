@@ -236,7 +236,9 @@ extension PageViewController {
     @objc func handleFile(command: UIKeyCommand) {
         if command.modifierFlags.contains(.command) {
             if command.input == "O" {
-                print("o")
+                if let vc = self.parent as? BaseViewController {
+                    vc.openPicker()
+                }
             }
         }
     }
