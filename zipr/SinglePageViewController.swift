@@ -12,6 +12,7 @@ import UIKit
 class SinglePageViewController: UIViewController {
     let label = UILabel(frame: .zero)
     let imageView = UIImageView(frame: .zero)
+    let activityIndicatorView = UIActivityIndicatorView(style: .large)
     
     var archiver: Archiver!
     
@@ -24,77 +25,66 @@ class SinglePageViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         if let archiver = archiver {
-            archiver.read(at: page)
+            if archiver.read(at: page) {
+                activityIndicatorView.startAnimating()
+            } else {
+                // error
+                // no page
+            }
         }
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        activityIndicatorView.hidesWhenStopped = true
         imageView.contentMode = .scaleAspectFit
         
         NotificationCenter.default.addObserver(self, selector: #selector(handle(notification:)), name: Notification.Name("Loaded"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(errorHandle(notification:)), name: Notification.Name("LoadedFailed"), object: nil)
         
         do {
-            label.textAlignment = .center
-            label.font = UIFont.systemFont(ofSize: 22)
-            
-            label.isHidden = true
-            
-            /// Instantiate StackView and configure it
-            let stackView = UIStackView(frame: .zero)
-            stackView.axis = .horizontal
-            stackView.alignment = .center
-            stackView.distribution = .fill
-            stackView.spacing = 20
-            stackView.translatesAutoresizingMaskIntoConstraints = false
+            imageView.translatesAutoresizingMaskIntoConstraints = false
 
-            view.addSubview(stackView)
+            view.addSubview(imageView)
 
             /// Setup StackView's constraints to its superview
-            view.topAnchor.constraint(equalTo: stackView.topAnchor).isActive = true
-            view.bottomAnchor.constraint(equalTo: stackView.bottomAnchor).isActive = true
-            view.leadingAnchor.constraint(equalTo: stackView.leadingAnchor).isActive = true
-            view.trailingAnchor.constraint(equalTo: stackView.trailingAnchor).isActive = true
+            imageView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+            imageView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+            imageView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+            imageView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
             
-            stackView.addArrangedSubview(label)
+            activityIndicatorView.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(activityIndicatorView)
+            activityIndicatorView.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
+            activityIndicatorView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        }
+    }
+    
+    @objc func errorHandle(notification : Notification) {
+        guard let userInfo = notification.userInfo,
+            let page = userInfo["page"] as? Int,
+            let sent_identifier = userInfo["identifier"] as? String
+        else {
+            return
         }
         
-        do {
-            /// Instantiate StackView and configure it
-            let stackView = UIStackView(frame: .zero)
-            stackView.axis = .horizontal
-            stackView.alignment = .center
-            stackView.distribution = .fill
-            stackView.spacing = 20
-            stackView.translatesAutoresizingMaskIntoConstraints = false
-
-            view.addSubview(stackView)
-
-            /// Setup StackView's constraints to its superview
-            view.topAnchor.constraint(equalTo: stackView.topAnchor).isActive = true
-            view.bottomAnchor.constraint(equalTo: stackView.bottomAnchor).isActive = true
-            view.leadingAnchor.constraint(equalTo: stackView.leadingAnchor).isActive = true
-            view.trailingAnchor.constraint(equalTo: stackView.trailingAnchor).isActive = true
-            
-            stackView.addArrangedSubview(imageView)
+        DispatchQueue.main.async {
+            if let identifier = self.archiver?.identifier {
+                if sent_identifier == identifier {
+                    if self.page == page {
+                        self.activityIndicatorView.stopAnimating()
+                    }
+                }
+            }
         }
     }
     
     @objc func handle(notification : Notification) {
-        guard let userInfo = notification.userInfo else {
-            return
-        }
-        
-        guard let image = userInfo["image"] as? UIImage else {
-            return
-        }
-        
-        guard let page = userInfo["page"] as? Int else {
-            return
-        }
-        
-        guard let sent_identifier = userInfo["identifier"] as? String else {
+        guard let userInfo = notification.userInfo,
+            let image = userInfo["image"] as? UIImage,
+            let page = userInfo["page"] as? Int,
+            let sent_identifier = userInfo["identifier"] as? String
+        else {
             return
         }
         
@@ -102,6 +92,7 @@ class SinglePageViewController: UIViewController {
             if sent_identifier == self.archiver.identifier {
                 if self.page == page {
                     self.imageView.image = image
+                    self.activityIndicatorView.stopAnimating()
                 }
             }
         }

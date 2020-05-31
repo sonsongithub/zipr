@@ -234,7 +234,7 @@ class Archiver {
         queue.async {
             do {
 // for test
-// Thread.sleep(forTimeInterval: 1)
+//                Thread.sleep(forTimeInterval: 1)
                 var d = Data()
                 
                 _ = try self.archive.extract(tempCurrentTask.entry, bufferSize: 20480, skipCRC32: true, progress: tempCurrentTask.progress, consumer: { (data) in
@@ -242,19 +242,27 @@ class Archiver {
                 })
                 
                 if let image = UIImage(data: d) {
-                
                     let userInfo: [String: Any] = [
                         "image": image,
                         "page": tempCurrentTask.page,
                         "identifier": self.identifier
                     ]
-                    print(userInfo)
-                    
                     NotificationCenter.default.post(name: Notification.Name("Loaded"), object: nil, userInfo: userInfo)
-                } 
+                } else {
+                    let userInfo: [String: Any] = [
+                        "page": tempCurrentTask.page,
+                        "identifier": self.identifier
+                    ]
+                    NotificationCenter.default.post(name: Notification.Name("LoadedFailed"), object: nil, userInfo: userInfo)
+                }
                 
             } catch {
-                print("error")
+                let userInfo: [String: Any] = [
+                    "error": error,
+                    "page": tempCurrentTask.page,
+                    "identifier": self.identifier
+                ]
+                NotificationCenter.default.post(name: Notification.Name("LoadedFailed"), object: nil, userInfo: userInfo)
             }
             
             self.semaphore.signal()
@@ -265,10 +273,10 @@ class Archiver {
         }
     }
     
-    func read(at index: Int) -> Void {
+    func read(at index: Int) -> Bool {
         // ill index for entries
         guard index >= 0 && index < entries.count else {
-            return
+            return false
         }
         
         let entry = entries[index]
@@ -277,5 +285,7 @@ class Archiver {
         taskQueue.append(task)
         
         pop()
+        
+        return true
     }
 }

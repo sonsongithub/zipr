@@ -40,12 +40,18 @@ class SpreadPageViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         if let archiver = self.archiver {
-            archiver.read(at: leftPage)
-            archiver.read(at: rightPage)
-            leftActivityIndicatorView.isHidden = false
-            leftActivityIndicatorView.startAnimating()
-            rightActivityIndicatorView.isHidden = false
-            rightActivityIndicatorView.startAnimating()
+            if archiver.read(at: leftPage) {
+                leftActivityIndicatorView.startAnimating()
+            } else {
+                // error
+                // no page
+            }
+            if archiver.read(at: rightPage) {
+                rightActivityIndicatorView.startAnimating()
+            } else {
+                // error
+                // no page
+            }
         }
     }
     
@@ -57,37 +63,12 @@ class SpreadPageViewController: UIViewController {
         rightImageView.contentMode = .scaleAspectFit
         rightImageView.clipsToBounds = true
         
+        leftActivityIndicatorView.hidesWhenStopped = true
+        rightActivityIndicatorView.hidesWhenStopped = true
+        
         NotificationCenter.default.addObserver(self, selector: #selector(handle(notification:)), name: Notification.Name("Loaded"), object: nil)
-        
-//        do {
-//            leftLabel.textAlignment = .center
-//            leftLabel.font = UIFont.systemFont(ofSize: 22)
-//            leftLabel.backgroundColor = .red
-//
-//            rightLabel.textAlignment = .center
-//            rightLabel.font = UIFont.systemFont(ofSize: 22)
-//            rightLabel.backgroundColor = .red
-//
-//            /// Instantiate StackView and configure it
-//            let stackView = UIStackView(frame: .zero)
-//            stackView.axis = .horizontal
-//            stackView.alignment = .center
-//            stackView.distribution = .fillEqually
-//            stackView.spacing = 0
-//            stackView.translatesAutoresizingMaskIntoConstraints = false
-//
-//            view.addSubview(stackView)
-//
-//            /// Setup StackView's constraints to its superview
-//            view.topAnchor.constraint(equalTo: stackView.topAnchor).isActive = true
-//            view.bottomAnchor.constraint(equalTo: stackView.bottomAnchor).isActive = true
-//            view.leadingAnchor.constraint(equalTo: stackView.leadingAnchor).isActive = true
-//            view.trailingAnchor.constraint(equalTo: stackView.trailingAnchor).isActive = true
-//
-//            stackView.addArrangedSubview(leftLabel)
-//            stackView.addArrangedSubview(rightLabel)
-//        }
-        
+        NotificationCenter.default.addObserver(self, selector: #selector(errorHandle(notification:)), name: Notification.Name("LoadedFailed"), object: nil)
+       
         do {
             /// Instantiate StackView and configure it
             let stackView = UIStackView(frame: .zero)
@@ -146,20 +127,35 @@ class SpreadPageViewController: UIViewController {
         }
     }
     
+    @objc func errorHandle(notification : Notification) {
+        guard let userInfo = notification.userInfo,
+            let page = userInfo["page"] as? Int,
+            let sent_identifier = userInfo["identifier"] as? String
+        else {
+            return
+        }
+        
+        DispatchQueue.main.async {
+            if let identifier = self.archiver?.identifier {
+                if sent_identifier == identifier {
+                    if self.leftPage == page {
+                        self.leftActivityIndicatorView.stopAnimating()
+                        
+                    }
+                    if self.rightPage == page {
+                        self.rightActivityIndicatorView.stopAnimating()
+                    }
+                }
+            }
+        }
+    }
+    
     @objc func handle(notification : Notification) {
-        guard let userInfo = notification.userInfo else {
-            return
-        }
-        
-        guard let image = userInfo["image"] as? UIImage else {
-            return
-        }
-        
-        guard let page = userInfo["page"] as? Int else {
-            return
-        }
-        
-        guard let sent_identifier = userInfo["identifier"] as? String else {
+        guard let userInfo = notification.userInfo,
+            let image = userInfo["image"] as? UIImage,
+            let page = userInfo["page"] as? Int,
+            let sent_identifier = userInfo["identifier"] as? String
+        else {
             return
         }
         
@@ -168,13 +164,11 @@ class SpreadPageViewController: UIViewController {
                 if sent_identifier == identifier {
                     if self.leftPage == page {
                         self.leftImageView.image = image
-                        self.leftActivityIndicatorView.isHidden = true
                         self.leftActivityIndicatorView.stopAnimating()
                         
                     }
                     if self.rightPage == page {
                         self.rightImageView.image = image
-                        self.rightActivityIndicatorView.isHidden = true
                         self.rightActivityIndicatorView.stopAnimating()
                     }
                 }
