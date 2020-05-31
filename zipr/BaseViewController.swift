@@ -9,14 +9,17 @@
 import Foundation
 import UIKit
 import ZIPFoundation
+import os
 
 class BaseViewController: UIViewController {
-    @IBOutlet var activityIndicatorView: UIActivityIndicatorView? = nil
+    let activityIndicatorView: UIActivityIndicatorView = UIActivityIndicatorView(style: .large)
     
     var page: Int = 0
-    
+    var needsOpenFilePicker = true
     var pageType: PageType = .spread
     var pageDirection: PageDirection = .left
+    
+    var picker: UIDocumentPickerViewController?
 
     #if targetEnvironment(macCatalyst)
     var selectStyleToolbar: NSToolbarItemGroup?
@@ -61,20 +64,21 @@ class BaseViewController: UIViewController {
     }
     #endif
     
-    func open(url url: URL) {
-
+    func isOpenedAnyFile() -> Bool {
+        if let _ = self.children.first as? BaseViewController {
+            return true
+        }
+        return false
+    }
+    
+    func open(data: Data) {
+        DispatchQueue.main.async {
+            self.activityIndicatorView.startAnimating()
+            self.activityIndicatorView.isHidden = false
+        }
         DispatchQueue.main.async {
             do {
-                let archiver = try Archiver(url, identifier: url.absoluteString.digest(type: .sha256))
-
-                
-                let userActivity = NSUserActivity(activityType: "reader")
-                userActivity.title = "Restore Item"
-                
-                let state: [String: URL] = ["URL": archiver.url]
-                userActivity.addUserInfoEntries(from: state)
-                
-                self.view.window?.windowScene?.userActivity = userActivity
+                let archiver = try Archiver(data: data)
 
                 if let child = self.children.first {
                     child.view.removeFromSuperview()
@@ -93,31 +97,69 @@ class BaseViewController: UIViewController {
                 print("unknown error")
             }
             DispatchQueue.main.async {
-                self.activityIndicatorView?.stopAnimating()
-                self.activityIndicatorView?.isHidden = true
+                self.activityIndicatorView.stopAnimating()
+                self.activityIndicatorView.isHidden = true
             }
         }
+    }
+    
+    func open(url: URL) {
+        
+        func open_(url: URL) {
+            DispatchQueue.main.async {
+                do {
+                    let archiver = try Archiver(url: url)
+                    if let child = self.children.first {
+                        child.view.removeFromSuperview()
+                        child.removeFromParent()
+
+                    }
+                    let vc = PageViewController(archiver: archiver, page: self.page, pageDirection: self.pageDirection, pageType: self.pageType)
+                    self.addChild(vc)
+                    vc.view.frame = self.view.bounds
+                    self.view.addSubview(vc.view)
+                    vc.didMove(toParent: self)
+                    
+                } catch let error as NSError {
+                    print(error)
+                } catch {
+                    print("unknown error")
+                }
+                DispatchQueue.main.async {
+                    self.activityIndicatorView.stopAnimating()
+                    self.activityIndicatorView.isHidden = true
+                }
+            }
+        }
+        
+        DispatchQueue.main.async {
+            self.activityIndicatorView.startAnimating()
+            self.activityIndicatorView.isHidden = false
+        }
+        
+        if let picker = picker {
+            picker.dismiss(animated: true) {
+                open_(url: url)
+                self.picker = nil
+            }
+        } else {
+            open_(url: url)
+        }
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        os_log("[zipr] BaseViewController viewDidAppear", log: scribe, type: .error)
         
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.edgesForExtendedLayout = []
-        openPicker()
+        os_log("[zipr] BaseViewController viewDidLoad", log: scribe, type: .error)
         
-        print("----------------------")
-        UIApplication.shared.connectedScenes.forEach { (scene) in
-            if let uiscene = scene as? UIWindowScene {
-                uiscene.windows.forEach { (window) in
-                    if window.rootViewController == self {
-                        print(uiscene.userActivity)
-                        print(uiscene.userActivity?.activityType)
-                        print(uiscene.userActivity?.userInfo)
-                    }
-                }
-            }
-        }
-        
+        self.view.backgroundColor = .systemGray
+                
         let tapGesture:UITapGestureRecognizer = UITapGestureRecognizer(
         target: self,
         action: #selector(BaseViewController.tapped(_:)))
@@ -126,6 +168,10 @@ class BaseViewController: UIViewController {
         
         let dropInteraction = UIDropInteraction(delegate: self)
         view.addInteraction(dropInteraction)
+
+        if self.needsOpenFilePicker {
+            self.openPicker()
+        }
     }
     
     @objc func tapped(_ sender: UITapGestureRecognizer){
@@ -192,13 +238,15 @@ class BaseViewController: UIViewController {
     
     func openPicker() {
         
-        self.activityIndicatorView?.isHidden = false
-        self.activityIndicatorView?.startAnimating()
+        self.activityIndicatorView.isHidden = false
+        self.activityIndicatorView.startAnimating()
 
         DispatchQueue.main.async {
-            let picker = UIDocumentPickerViewController.init(documentTypes: ["public.zip-archive"], in: .import)
-            picker.delegate = self
-            self.present(picker, animated: true, completion: nil)
+            self.picker = UIDocumentPickerViewController.init(documentTypes: ["public.zip-archive"], in: .import)
+            self.picker?.delegate = self
+            if let picker = self.picker {
+                self.present(picker, animated: true, completion: nil)
+            }
         }
     }
     
@@ -224,9 +272,11 @@ extension BaseViewController: UIDocumentPickerDelegate {
 
         func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
             
+            self.picker = nil
+            
             DispatchQueue.main.async {
-                self.activityIndicatorView?.stopAnimating()
-                self.activityIndicatorView?.isHidden = true
+                self.activityIndicatorView.stopAnimating()
+                self.activityIndicatorView.isHidden = true
             }
             
             #if targetEnvironment(macCatalyst)
@@ -254,43 +304,10 @@ extension BaseViewController: UIDocumentPickerDelegate {
         
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
             if let url = urls.first {
-                DispatchQueue.main.async {
-                    do {
-                        let archiver = try Archiver(url, identifier: url.absoluteString.digest(type: .sha256))
-
-                        
-                        let userActivity = NSUserActivity(activityType: "reader")
-                        userActivity.title = "Restore Item"
-                        
-                        let state: [String: URL] = ["URL": archiver.url]
-                        userActivity.addUserInfoEntries(from: state)
-                        
-                        self.view.window?.windowScene?.userActivity = userActivity
-
-                        if let child = self.children.first {
-                            child.view.removeFromSuperview()
-                            child.removeFromParent()
-
-                        }
-                        let vc = PageViewController(archiver: archiver, page: self.page, pageDirection: self.pageDirection, pageType: self.pageType)
-                        self.addChild(vc)
-                        vc.view.frame = self.view.bounds
-                        self.view.addSubview(vc.view)
-                        vc.didMove(toParent: self)
-                        
-                    } catch let error as NSError {
-                        print(error)
-                    } catch {
-                        print("unknown error")
-                    }
-                    DispatchQueue.main.async {
-                        self.activityIndicatorView?.stopAnimating()
-                        self.activityIndicatorView?.isHidden = true
-                    }
-                }
+                open(url: url)
             } else {
-                self.activityIndicatorView?.stopAnimating()
-                self.activityIndicatorView?.isHidden = true
+                self.activityIndicatorView.stopAnimating()
+                self.activityIndicatorView.isHidden = true
             }
             
         }
@@ -554,7 +571,7 @@ extension BaseViewController: UIDropInteractionDelegate {
                         print(error)
                     }
                     if let data = data {
-                        print(data.count)
+                        self.open(data: data)
                     }
                 }
             }

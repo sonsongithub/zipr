@@ -22,6 +22,24 @@ class ArchiverTask {
     }
 }
 
+private let __regex: NSRegularExpression! = {
+    do {
+        return try NSRegularExpression(pattern: "._", options: .caseInsensitive)
+    } catch {
+        assert(false, "Fatal error: \(#file) \(#line) \(error)")
+        return nil
+    }
+}()
+
+private let extension_regrex: NSRegularExpression! = {
+    do {
+        return try NSRegularExpression(pattern: "(jpg|gif|png|jpeg)", options: .caseInsensitive)
+    } catch {
+        assert(false, "Fatal error: \(#file) \(#line) \(error)")
+        return nil
+    }
+}()
+
 private let regex: NSRegularExpression! = {
     do {
         return try NSRegularExpression(pattern: "^[^\\.]+.?\\.(jpg|gif|png|jpeg)", options: .caseInsensitive)
@@ -111,33 +129,12 @@ func orderByExtractedIntegerAmongFilePath(_ entryInfos: [EntryInfo]) -> [Entry] 
     }
 }
 
-class Archiver {
-    let archive: Archive
-    let entries: [Entry]
-    let queue: DispatchQueue
-    let semaphore = DispatchSemaphore(value: 0)
-    let url: URL
-    let identifier: String
-    
-    var reading = false
-    
-    var taskQueue: [ArchiverTask] = Array([])
-    var currentTask: ArchiverTask? = nil
-    
-    
-    init(_ fileURL: URL, identifier: String) throws {
+extension Archive {
+    func extractOrderedContents() -> [Entry] {
         
-        url = fileURL
-        self.identifier = identifier
-        
-        guard let tmp = Archive(url: fileURL, accessMode: .read, preferredEncoding: String.Encoding.shiftJIS) else {
-            throw NSError(domain: "", code: 0, userInfo: nil)
-        }
-        
-        archive = tmp
-        
-        let entryInfos: [EntryInfo] = archive.enumerated()
+        let entryInfos: [EntryInfo] = self.enumerated()
             .map { (offset, element) -> Entry in
+                print(element.path)
                 return element
             }
             .filter { (entry) -> Bool in
@@ -154,7 +151,21 @@ class Archiver {
             }
         
         if entryInfos.count == 0 {
-            entries = archive.enumerated()
+            return self.enumerated()
+                .filter({ (element) -> Bool in
+                    let urlPath = URL(fileURLWithPath: element.element.path)
+                    let str = urlPath.pathExtension
+                    let result = extension_regrex.matches(in: str, options: [], range: NSRange(location: 0, length: str.count))
+                    return (result.count > 0)
+                })
+                .filter({ (element) -> Bool in
+                    let urlPath = URL(fileURLWithPath: element.element.path)
+                    let str = urlPath.lastPathComponent
+                    if str.count <= 2 {
+                        return false
+                    }
+                    return !(str[str.startIndex] == "." && str[str.index(str.startIndex, offsetBy: 1)] == "_")
+                })
                 .sorted(by: { (left, right) -> Bool in
                     return left.element.path < right.element.path
                 })
@@ -162,10 +173,42 @@ class Archiver {
                     return e.element
                 })
         } else {
-            entries = orderByExtractedIntegerAmongFilePath(entryInfos)
+            return orderByExtractedIntegerAmongFilePath(entryInfos)
         }
+    }
+}
+
+class Archiver {
+    let archive: Archive
+    let entries: [Entry]
+    let queue: DispatchQueue
+    let semaphore = DispatchSemaphore(value: 0)
+    let identifier: String
+    
+    var reading = false
+    
+    var taskQueue: [ArchiverTask] = Array([])
+    var currentTask: ArchiverTask? = nil
+    
+    init(data fileData: Data) throws {
+        self.identifier = fileData.digest(type: .sha256)
+        self.queue = DispatchQueue(label: self.identifier)
+        guard let tmp = Archive(data: fileData, accessMode: .read, preferredEncoding: String.Encoding.shiftJIS) else {
+            throw NSError(domain: "", code: 0, userInfo: nil)
+        }
+        archive = tmp
+        entries = archive.extractOrderedContents()
+    }
+    
+    init(url fileURL: URL) throws {
+        self.identifier = fileURL.absoluteString.digest(type: .sha256)
+        queue = DispatchQueue(label: self.identifier)
         
-        queue = DispatchQueue(label: "archiver")
+        guard let tmp = Archive(url: fileURL, accessMode: .read, preferredEncoding: String.Encoding.shiftJIS) else {
+            throw NSError(domain: "", code: 0, userInfo: nil)
+        }
+        archive = tmp
+        entries = archive.extractOrderedContents()
     }
     
     func cancelAll() {
@@ -190,7 +233,8 @@ class Archiver {
 
         queue.async {
             do {
-//                Thread.sleep(forTimeInterval: 1)
+// for test
+// Thread.sleep(forTimeInterval: 1)
                 var d = Data()
                 
                 _ = try self.archive.extract(tempCurrentTask.entry, bufferSize: 20480, skipCRC32: true, progress: tempCurrentTask.progress, consumer: { (data) in
@@ -199,7 +243,6 @@ class Archiver {
                 
                 if let image = UIImage(data: d) {
                 
-                    
                     let userInfo: [String: Any] = [
                         "image": image,
                         "page": tempCurrentTask.page,
@@ -208,7 +251,7 @@ class Archiver {
                     print(userInfo)
                     
                     NotificationCenter.default.post(name: Notification.Name("Loaded"), object: nil, userInfo: userInfo)
-                }
+                } 
                 
             } catch {
                 print("error")
