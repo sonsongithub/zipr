@@ -29,6 +29,7 @@ class PageViewController: UIPageViewController {
     var page: Int = 0
     
     var count: Int = 11
+    var paging = false
 
     required init?(coder: NSCoder) {
         self.pageDirection = .left
@@ -296,29 +297,49 @@ extension PageViewController: UIPageViewControllerDelegate, UIPageViewController
 extension PageViewController {
     func pageLeft() {
         if let (vc, nextPage) = viewControllerForPageLeft(pageType: pageType, pageDirection: pageDirection, page: page) {
-            page = nextPage
-            self.setViewControllers([vc], direction: .reverse, animated: true, completion: nil)
+            if !paging {
+                page = nextPage
+                paging = true
+                self.setViewControllers([vc], direction: .reverse, animated: true) { (succeeded) in
+                    self.paging = false
+                }
+            }
         }
     }
     
     func pageRight() {
         if let (vc, nextPage) = viewControllerForPageRight(pageType: pageType, pageDirection: pageDirection, page: page) {
-            page = nextPage
-            self.setViewControllers([vc], direction: .forward, animated: true, completion: nil)
+            if !paging {
+                page = nextPage
+                paging = true
+                self.setViewControllers([vc], direction: .forward, animated: true) { (succeeded) in
+                    self.paging = false
+                }
+            }
         }
     }
     
     func shiftPageLeft() {
         if let (vc, nextPage) = viewControllerForShiftPageLeft(pageType: pageType, pageDirection: pageDirection, page: page) {
-            page = nextPage
-            self.setViewControllers([vc], direction: .reverse, animated: (pageType == .single), completion: nil)
+            if !paging {
+                page = nextPage
+                paging = true
+                self.setViewControllers([vc], direction: .reverse, animated: (pageType == .single)) { (succeeded) in
+                    self.paging = false
+                }
+            }
         }
     }
     
     func shiftPageRight() {
         if let (vc, nextPage) = viewControllerForShiftPageRight(pageType: pageType, pageDirection: pageDirection, page: page) {
-            page = nextPage
-            self.setViewControllers([vc], direction: .forward, animated: (pageType == .single), completion: nil)
+            if !paging {
+                page = nextPage
+                paging = true
+                self.setViewControllers([vc], direction: .forward, animated: (pageType == .single)) { (succeeded) in
+                    self.paging = false
+                }
+            }
         }
     }
 }
