@@ -7,75 +7,144 @@
 //
 
 import UIKit
+import os
+
+let scribe = OSLog(subsystem: "com.mycompany.myapp", category: "myapp")
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
-
-    func stateRestorationActivity(for scene: UIScene) -> NSUserActivity? {
-        return scene.userActivity
-    }
     
-    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-        // コールバックで来たURLの取得
+    func macos_scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         guard let url = URLContexts.first?.url else {
             return
         }
-        
-        print(url)
-        
-        var userActivity = NSUserActivity(
-          activityType: "com.sonson.multiwindow"
-        )
-        
-        userActivity.userInfo = ["url": url]
-        
-        print(userActivity)
-        
-        print(scene)
-        
-        guard let windowScene = (scene as? UIWindowScene) else { return }
-        if let window = windowScene.windows.first {
-            if let rootViewController = window.rootViewController as? BaseViewController {
-                rootViewController.open(url: url)
+        os_log("[zipr] url= %@", log: scribe, type: .error, url.absoluteString)
+
+        let windowCount = UIApplication.shared.connectedScenes.reduce(0) { (count, scene) -> Int in
+            if let uiscene = scene as? UIWindowScene {
+                return uiscene.windows.count + count
+            } else {
+                return count
             }
         }
+        os_log("[zipr] windowCount = %d", log: scribe, type: .error, windowCount)
+
+        let squences_windows = UIApplication.shared.connectedScenes.compactMap { (scene) -> UIWindowScene? in
+            return scene as? UIWindowScene
+        }
+        .map { (windowScene) -> [UIWindow] in
+            return windowScene.windows
+        }
+        .joined()
+        
+        let baseViewControllers = Array(squences_windows).compactMap { (window) -> BaseViewController? in
+            if let vc = window.rootViewController as? BaseViewController {
+                if vc.picker != nil && !vc.isOpenedAnyFile() {
+                    return vc
+                }
+            }
+            return nil
+        }
+
+        if let vc = baseViewControllers.first {
+            vc.open(url: url)
+        } else {
+            let act = NSUserActivity(activityType: "a")
+            act.userInfo = ["url": url.absoluteString]
+            UIApplication.shared.requestSceneSessionActivation(nil, userActivity: act, options: nil, errorHandler: nil)
+        }
+    }
+    
+    func ios_scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        guard let url = URLContexts.first?.url else {
+            return
+        }
+        os_log("[zipr] url= %@", log: scribe, type: .error, url.absoluteString)
+        let act = NSUserActivity(activityType: "a")
+        act.userInfo = ["url": url.absoluteString]
+        UIApplication.shared.requestSceneSessionActivation(nil, userActivity: act, options: nil, errorHandler: nil)
     }
 
-    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        print("[zipr] scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>)")
+        os_log("[zipr] scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>)", log: scribe, type: .error)
         
-        print(scene)
-        
-        print("scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions)")
-        
-        print(connectionOptions.userActivities)
-        
-        print(session.userInfo)
-        
-        if let urlContext = connectionOptions.urlContexts.first {
-            print(urlContext.url)
-        }
-        
-        let a = connectionOptions.userActivities
-        
-        print(a)
-        
-        if let b = a.first {
-            let c = b.activityType
-            print(c)
-            print(b.userInfo)
-            
-        }
-        
+        #if targetEnvironment(macCatalyst)
+            macos_scene(scene, openURLContexts: URLContexts)
+        #else
+            ios_scene(scene, openURLContexts: URLContexts)
+        #endif
+    }
+    
+    func macos_scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
         // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
         guard let windowScene = (scene as? UIWindowScene) else { return }
+                
+        let window = UIWindow(windowScene: windowScene)
+        self.window = window
+        
+        let vc = BaseViewController(nibName: nil, bundle: nil)
+        self.window?.rootViewController = vc
+        
+        if let urlString = connectionOptions.userActivities.first?.userInfo?["url"] as? String {
+            if let url = URL(string: urlString) {
+                print(url)
+                vc.needsOpenFilePicker = false
+                vc.open(url: url)
+            }
+        }
+        
+        if let urlContext = connectionOptions.urlContexts.first {
+            os_log("[zipr] url = %@", log: scribe, type: .error, urlContext.url.absoluteString)
+            vc.needsOpenFilePicker = false
+            vc.open(url: urlContext.url)
+        }
+        
+        self.window?.makeKeyAndVisible()
         
         #if targetEnvironment(macCatalyst)
         if let titlebar = windowScene.titlebar {
             titlebar.titleVisibility = .hidden
             titlebar.toolbar = nil
         }
+        #endif
+    }
+    
+    func ios_scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+        guard let windowScene = (scene as? UIWindowScene) else { return }
+                
+        let window = UIWindow(windowScene: windowScene)
+        self.window = window
+        
+        let vc = BaseViewController(nibName: nil, bundle: nil)
+        
+        if let urlString = connectionOptions.userActivities.first?.userInfo?["url"] as? String {
+            if let url = URL(string: urlString) {
+                print(url)
+                vc.needsOpenFilePicker = false
+                vc.open(url: url)
+            }
+        }
+        
+        if let urlContext = connectionOptions.urlContexts.first {
+            os_log("[zipr] url = %@", log: scribe, type: .error, urlContext.url.absoluteString)
+            vc.needsOpenFilePicker = false
+            vc.open(url: urlContext.url)
+        }
+        
+        self.window?.rootViewController = vc
+        self.window?.makeKeyAndVisible()
+    }
+
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+        print("[zipr] scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions)")
+        os_log("[zipr] scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions)", log: scribe, type: .error)
+        #if targetEnvironment(macCatalyst)
+            macos_scene(scene, willConnectTo: session, options: connectionOptions)
+        #else
+            ios_scene(scene, willConnectTo: session, options: connectionOptions)
         #endif
     }
 
