@@ -193,7 +193,10 @@ class BaseViewController: UIViewController {
                     vc.pageRight()                }
             } else {
                 #if targetEnvironment(macCatalyst)
-                titleBarHidden = !titleBarHidden
+                let rect = self.view.bounds.inset(by: self.view.safeAreaInsets)
+                if rect.contains(tap) {
+                    titleBarHidden = !titleBarHidden
+                }
                 #endif
             }
         }
