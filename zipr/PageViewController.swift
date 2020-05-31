@@ -21,7 +21,7 @@ enum PageType {
 
 class PageViewController: UIPageViewController {
     
-    var archiver: Archiver?
+    let archiver: Archiver!
     
     let pageDirection :PageDirection
     let pageType: PageType
@@ -34,7 +34,9 @@ class PageViewController: UIPageViewController {
     required init?(coder: NSCoder) {
         self.pageDirection = .left
         self.pageType = .single
+        self.archiver = nil
         super.init(coder: coder)
+        fatalError("Can not create this view controller with NSCoder")
     }
     
     func viewControllerForPageLeft(pageType: PageType, pageDirection: PageDirection, page: Int) -> (UIViewController, Int)? {

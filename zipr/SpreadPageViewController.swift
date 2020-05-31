@@ -19,7 +19,7 @@ class SpreadPageViewController: UIViewController {
     
     var page: Int = 0
     
-    var archiver: Archiver?
+    var archiver: Archiver!
     
     var leftPage: Int = 0 {
         didSet {

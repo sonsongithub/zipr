@@ -13,7 +13,7 @@ class SinglePageViewController: UIViewController {
     let label = UILabel(frame: .zero)
     let imageView = UIImageView(frame: .zero)
     
-    var archiver: Archiver?
+    var archiver: Archiver!
     
     var page: Int = 0 {
         didSet {
@@ -99,13 +99,9 @@ class SinglePageViewController: UIViewController {
         }
         
         DispatchQueue.main.async {
-            if let identifier = self.archiver?.identifier {
-                if sent_identifier == identifier {
-                    print("self.page", self.page)
-                    print("page", page)
-                    if self.page == page {
-                        self.imageView.image = image
-                    }
+            if sent_identifier == self.archiver.identifier {
+                if self.page == page {
+                    self.imageView.image = image
                 }
             }
         }
