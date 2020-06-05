@@ -545,18 +545,10 @@ extension BaseViewController: NSToolbarDelegate {
 extension BaseViewController: UIDropInteractionDelegate {
     func dropInteraction(_ interaction: UIDropInteraction,
                          canHandle session: UIDropSession) -> Bool {
-        print(session.localDragSession?.localContext)
-        print(session.items)
-        session.items.forEach { (item) in
-            print(item)
-            print(item.itemProvider)
-            print(item.localObject)
-            print(item.itemProvider.hasItemConformingToTypeIdentifier("public.zip-archive"))
-            print(item.itemProvider.canLoadObject(ofClass: URL.self))
-            print(item.itemProvider.canLoadObject(ofClass: String.self))
+        let candidates = session.items.filter { (item) -> Bool in
+            return item.itemProvider.hasItemConformingToTypeIdentifier("public.zip-archive")
         }
-        
-        return true
+        return (candidates.count > 0)
     }
 
     func dropInteraction(_ interaction: UIDropInteraction, sessionDidUpdate session: UIDropSession) -> UIDropProposal {
@@ -570,21 +562,13 @@ extension BaseViewController: UIDropInteractionDelegate {
         if session.hasItemsConforming(toTypeIdentifiers: ["public.zip-archive"]) {
             session.items.forEach { (item) in
                 item.itemProvider.loadDataRepresentation(forTypeIdentifier: "public.zip-archive") { (data, error) in
-                    if let error = error {
-                        print(error)
-                    }
                     if let data = data {
-                        self.open(data: data)
+                        DispatchQueue.main.async {
+                            self.open(data: data)
+                        }
                     }
                 }
             }
         }
-        
-//        // This is called with an array of NSURL
-//    session.loadObjects(ofClass: URL.self) { urls in
-//            for url in urls {
-//                importJSONData(from: url)
-//            }
-//        }
     }
 }

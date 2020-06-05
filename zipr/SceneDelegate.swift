@@ -60,9 +60,24 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             return
         }
         os_log("[zipr] url= %@", log: scribe, type: .error, url.absoluteString)
-        let act = NSUserActivity(activityType: "a")
-        act.userInfo = ["url": url.absoluteString]
-        UIApplication.shared.requestSceneSessionActivation(nil, userActivity: act, options: nil, errorHandler: nil)
+        
+        do {
+            if !url.startAccessingSecurityScopedResource() {
+                throw NSError(domain: "com.sonson.zipr", code: 0, userInfo: nil)
+            }
+            
+            let data = try Data.init(contentsOf: url)
+            print(data.count)
+            
+            url.stopAccessingSecurityScopedResource()
+
+            let act = NSUserActivity(activityType: "a")
+            act.userInfo = ["data": data]
+            UIApplication.shared.requestSceneSessionActivation(nil, userActivity: act, options: nil, errorHandler: nil)
+            
+        } catch {
+            print(error)
+        }
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
@@ -87,7 +102,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         let vc = BaseViewController(nibName: nil, bundle: nil)
         self.window?.rootViewController = vc
-        
+    
         if let urlString = connectionOptions.userActivities.first?.userInfo?["url"] as? String {
             if let url = URL(string: urlString) {
                 print(url)
@@ -119,13 +134,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         self.window = window
         
         let vc = BaseViewController(nibName: nil, bundle: nil)
-        
-        if let urlString = connectionOptions.userActivities.first?.userInfo?["url"] as? String {
-            if let url = URL(string: urlString) {
-                print(url)
-                vc.needsOpenFilePicker = false
-                vc.open(url: url)
-            }
+
+        if let data = connectionOptions.userActivities.first?.userInfo?["data"] as? Data {
+            print(data.count)
+            vc.needsOpenFilePicker = false
+            vc.open(data: data)
         }
         
         if let urlContext = connectionOptions.urlContexts.first {
