@@ -110,11 +110,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                          input: UIKeyCommand.inputLeftArrow,
                          modifierFlags: .alternate,
                          propertyList: nil)
+        
+        let commandPageForward = UIKeyCommand(title: NSLocalizedString("Page Forward", comment: ""),
+                         image: nil,
+                         action: #selector(BaseViewController.commandPageForward(_:)),
+                         input: " ",
+                         modifierFlags: [],
+                         propertyList: nil)
+        
         return UIMenu(title: "",
                    image: nil,
                    identifier: UIMenu.Identifier("com.sonson.zipr.menus.viewMenu"),
                    options: .displayInline,
-                   children: [commnadPageLeft, commandPageRight, commandShiftPageLeft, commandShiftPageRight])
+                   children: [commnadPageLeft, commandPageRight, commandShiftPageLeft, commandShiftPageRight, commandPageForward])
     }
     
     class func openMenu() -> UIMenu {

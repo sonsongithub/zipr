@@ -363,6 +363,9 @@ extension BaseViewController {
         if action == #selector(commandPageRight(_:)) {
             return true
         }
+        if action == #selector(commandPageForward(_:)) {
+            return true
+        }
         if action == #selector(commandShiftPageLeft(_:)) {
             return true
         }
@@ -405,6 +408,12 @@ extension BaseViewController {
     @objc func commandPageRight(_ sender: UICommand) {
         if let vc = self.children.first as? PageViewController {
             vc.pageRight()
+        }
+    }
+    
+    @objc func commandPageForward(_ sender: UICommand) {
+        if let vc = self.children.first as? PageViewController {
+            vc.pageForward()
         }
     }
     
