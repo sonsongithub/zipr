@@ -453,7 +453,7 @@ extension BaseViewController: NSToolbarDelegate {
     func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
         
         if (itemIdentifier == NSToolbarItem.Identifier(rawValue: "selectStyle")) {
-            let group = NSToolbarItemGroup.init(itemIdentifier: NSToolbarItem.Identifier(rawValue: "selectStyle"), titles: ["Spread", "Single"], selectionMode: .selectOne, labels: ["Spread", "Single"], target: self, action: #selector(BaseViewController.toolbarGroupSelectionChanged))
+            let group = NSToolbarItemGroup.init(itemIdentifier: NSToolbarItem.Identifier(rawValue: "selectStyle"), images: [UIImage(named: "book")!, UIImage(named: "single")!], selectionMode: .selectOne, labels: ["Spread", "Single"], target: self, action: #selector(BaseViewController.toolbarGroupSelectionChanged))
                 
             group.setSelected(true, at: 0)
             
@@ -466,7 +466,7 @@ extension BaseViewController: NSToolbarDelegate {
             let item = NSToolbarItem(itemIdentifier: NSToolbarItem.Identifier(rawValue: "goRight"))
     //            item.image = UIImage(systemName: "photo")?.forNSToolbar()
             item.target = self
-            item.label = "Add Image"
+            item.label = ""
             item.title = "   "
             
             
@@ -474,8 +474,7 @@ extension BaseViewController: NSToolbarDelegate {
         }
         
         if (itemIdentifier == NSToolbarItem.Identifier(rawValue: "selectDirection")) {
-            let group = NSToolbarItemGroup.init(itemIdentifier: NSToolbarItem.Identifier(rawValue: "selectDirection"), titles: ["Left", "Right"], selectionMode: .selectOne, labels: ["Left", "Right"], target: self, action: #selector(BaseViewController.toolbarGroupSelectionChanged_2))
-                
+            let group = NSToolbarItemGroup.init(itemIdentifier: NSToolbarItem.Identifier(rawValue: "selectDirection"), images: [UIImage(named: "left_direction")!, UIImage(named: "right_direction")!], selectionMode: .selectOne, labels: ["Left", "Right"], target: self, action: #selector(BaseViewController.toolbarGroupSelectionChanged_2))
             group.setSelected(true, at: 0)
             
             selectDirectionToolbar = group
@@ -485,22 +484,18 @@ extension BaseViewController: NSToolbarDelegate {
         
         if (itemIdentifier == NSToolbarItem.Identifier(rawValue: "goLeft")) {
             let item = NSToolbarItem(itemIdentifier: NSToolbarItem.Identifier(rawValue: "goLeft"))
-//            item.image = UIImage(systemName: "photo")?.forNSToolbar()
+            item.image = UIImage(systemName: "arrow.left")
             item.target = self
             item.action = #selector(didPushLeft)
-            item.label = "Add Image"
-            item.title = "L"
             item.isBordered = true
             
             return item
         }
         if (itemIdentifier == NSToolbarItem.Identifier(rawValue: "goRight")) {
             let item = NSToolbarItem(itemIdentifier: NSToolbarItem.Identifier(rawValue: "goRight"))
-//            item.image = UIImage(systemName: "photo")?.forNSToolbar()
+            item.image = UIImage(systemName: "arrow.right")
             item.target = self
             item.action = #selector(didPushRight)
-            item.label = "Add Image"
-            item.title = "R"
             item.isBordered = true
             
             return item
