@@ -11,9 +11,9 @@ import UIKit
 import ZIPFoundation
 import os
 
-class BaseViewController: UIViewController {
+class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
     let activityIndicatorView: UIActivityIndicatorView = UIActivityIndicatorView(style: .large)
-    
+
     var page: Int = 0
     var needsOpenFilePicker = true
     var pageType: PageType = .spread
@@ -64,11 +64,80 @@ class BaseViewController: UIViewController {
     }
     #endif
     
-    func isOpenedAnyFile() -> Bool {
-        if let _ = self.children.first as? BaseViewController {
-            return true
+    func getPageViewController() -> PageViewController? {
+        return self.children.compactMap { (vc) -> PageViewController? in
+            return vc as? PageViewController
+        }.first
+    }
+
+
+    func getThumbnailViewController() -> ThumbnailViewController? {
+        return self.children.compactMap { (vc) -> ThumbnailViewController? in
+            return vc as? ThumbnailViewController
+        }.first
+    }
+    
+    var constraint: NSLayoutConstraint?
+    
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        if let vc = getThumbnailViewController() {
+            if let v = touch.view {
+                if v.isDescendant(of: vc.view) {
+                    return false
+                }
+            }
         }
-        return false
+        return true
+    }
+
+    func toggleThumbnails() {
+
+        if let vc = getThumbnailViewController() {
+            if let constraint = self.constraint {
+                constraint.constant = 240
+            }
+            UIView.animate(withDuration: 0.3, animations: {
+                self.view.layoutIfNeeded()
+            }) { (flag) in
+                vc.view.removeFromSuperview()
+                vc.removeFromParent()
+                self.constraint = nil
+            }
+        } else {
+            
+            if let vc = getPageViewController() {
+
+                let thumbnailViewController = ThumbnailViewController(archiver: vc.archiver, pageDirection: pageDirection)
+                
+                thumbnailViewController.view.translatesAutoresizingMaskIntoConstraints = false
+
+                self.view.addSubview(thumbnailViewController.view)
+                
+                thumbnailViewController.view.heightAnchor.constraint(equalToConstant: 240).isActive = true
+                thumbnailViewController.view.leftAnchor.constraint(equalTo: self.view.leftAnchor).isActive = true
+                thumbnailViewController.view.rightAnchor.constraint(equalTo: self.view.rightAnchor).isActive = true
+                constraint = thumbnailViewController.view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor, constant: 240)
+                constraint?.isActive = true
+                
+                self.addChild(thumbnailViewController)
+
+                thumbnailViewController.didMove(toParent: self)
+                
+                DispatchQueue.main.async {
+                    self.constraint?.constant = 0
+                    UIView.animate(withDuration: 0.3, animations: {
+                        self.view.layoutIfNeeded()
+                    }) { (flag) in
+                    }
+                }
+                
+            }
+        }
+    }
+    
+
+    func isOpenedAnyFile() -> Bool {
+        return (getPageViewController() != nil)
     }
     
     func open(data: Data) {
@@ -80,10 +149,9 @@ class BaseViewController: UIViewController {
             do {
                 let archiver = try Archiver(data: data)
 
-                if let child = self.children.first {
-                    child.view.removeFromSuperview()
-                    child.removeFromParent()
-
+                if let currentPageViewController = self.getPageViewController() {
+                    currentPageViewController.view.removeFromSuperview()
+                    currentPageViewController.removeFromParent()
                 }
                 let vc = PageViewController(archiver: archiver, page: self.page, pageDirection: self.pageDirection, pageType: self.pageType)
                 self.addChild(vc)
@@ -109,10 +177,9 @@ class BaseViewController: UIViewController {
             DispatchQueue.main.async {
                 do {
                     let archiver = try Archiver(url: url)
-                    if let child = self.children.first {
-                        child.view.removeFromSuperview()
-                        child.removeFromParent()
-
+                    if let currentPageViewController = self.getPageViewController() {
+                        currentPageViewController.view.removeFromSuperview()
+                        currentPageViewController.removeFromParent()
                     }
                     let vc = PageViewController(archiver: archiver, page: self.page, pageDirection: self.pageDirection, pageType: self.pageType)
                     self.addChild(vc)
@@ -163,7 +230,9 @@ class BaseViewController: UIViewController {
         let tapGesture:UITapGestureRecognizer = UITapGestureRecognizer(
         target: self,
         action: #selector(BaseViewController.tapped(_:)))
-            
+        
+        tapGesture.cancelsTouchesInView = false
+        tapGesture.delegate = self
         self.view.addGestureRecognizer(tapGesture)
         
         let dropInteraction = UIDropInteraction(delegate: self)
@@ -185,12 +254,13 @@ class BaseViewController: UIViewController {
             let rightArea = CGRect(x: self.view.bounds.width * (1 - tapAreaWidthRatio), y: self.view.bounds.height * (1 - tapAreaHeightRatio) * 0.5, width: self.view.bounds.width * tapAreaWidthRatio, height: self.view.bounds.height * tapAreaHeightRatio)
             
             if leftArea.contains(tap) {
-                if let vc = self.children.first as? PageViewController {
-                    vc.pageLeft()
+                if let currentPageViewController = self.getPageViewController() {
+                    currentPageViewController.pageLeft()
                 }
             } else if rightArea.contains(tap) {
-                if let vc = self.children.first as? PageViewController {
-                    vc.pageRight()                }
+                if let currentPageViewController = self.getPageViewController() {
+                    currentPageViewController.pageRight()
+                }
             } else {
                 #if targetEnvironment(macCatalyst)
                 let rect = self.view.bounds.inset(by: self.view.safeAreaInsets)
@@ -198,7 +268,9 @@ class BaseViewController: UIViewController {
                     titleBarHidden = !titleBarHidden
                 }
                 #endif
+                toggleThumbnails()
             }
+            
         }
     }
     
@@ -227,6 +299,9 @@ class BaseViewController: UIViewController {
         selectDirectionToolbar?.setSelected(false, at: 0)
         selectDirectionToolbar?.setSelected(true, at: 1)
         #endif
+        if let vc = getThumbnailViewController() {
+            vc.pageDirection = .right
+        }
     }
     
     func toggleToLeft() {
@@ -236,6 +311,9 @@ class BaseViewController: UIViewController {
         selectDirectionToolbar?.setSelected(true, at: 0)
         selectDirectionToolbar?.setSelected(false, at: 1)
         #endif
+        if let vc = getThumbnailViewController() {
+            vc.pageDirection = .left
+        }
     }
     
     
@@ -254,17 +332,21 @@ class BaseViewController: UIViewController {
     }
     
     func updatePageView() {
-        if let child = self.children.first as? PageViewController {
-            if let archiver = child.archiver {
-                page = child.page
-                child.view.removeFromSuperview()
-                child.removeFromParent()
+
+        if let currentPageViewController = self.getPageViewController() {
+            
+            if let archiver = currentPageViewController.archiver {
+                page = currentPageViewController.page
+                currentPageViewController.view.removeFromSuperview()
+                currentPageViewController.removeFromParent()
 
                 let vc = PageViewController(archiver: archiver, page: page, pageDirection: pageDirection, pageType: pageType)
                 self.addChild(vc)
                 vc.view.frame = self.view.bounds
                 self.view.addSubview(vc.view)
                 vc.didMove(toParent: self)
+                
+                self.view.sendSubviewToBack(vc.view)
             }
         }
     }
@@ -400,32 +482,32 @@ extension BaseViewController {
     }
     
     @objc func commnadPageLeft(_ sender: UICommand) {
-        if let vc = self.children.first as? PageViewController {
-            vc.pageLeft()
+        if let currentPageViewController = self.getPageViewController() {
+            currentPageViewController.pageLeft()
         }
     }
     
     @objc func commandPageRight(_ sender: UICommand) {
-        if let vc = self.children.first as? PageViewController {
-            vc.pageRight()
+        if let currentPageViewController = self.getPageViewController() {
+            currentPageViewController.pageRight()
         }
     }
     
     @objc func commandPageForward(_ sender: UICommand) {
-        if let vc = self.children.first as? PageViewController {
-            vc.pageForward()
+        if let currentPageViewController = self.getPageViewController() {
+            currentPageViewController.pageForward()
         }
     }
     
     @objc func commandShiftPageLeft(_ sender: UICommand) {
-        if let vc = self.children.first as? PageViewController {
-            vc.shiftPageLeft()
+        if let currentPageViewController = self.getPageViewController() {
+            currentPageViewController.shiftPageLeft()
         }
     }
     
     @objc func commandShiftPageRight(_ sender: UICommand) {
-        if let vc = self.children.first as? PageViewController {
-            vc.shiftPageRight()
+        if let currentPageViewController = self.getPageViewController() {
+            currentPageViewController.shiftPageRight()
         }
     }
     
@@ -505,15 +587,15 @@ extension BaseViewController: NSToolbarDelegate {
     
     @objc func didPushLeft(sender: NSToolbarItemGroup) {
         print("didPushLeft")
-        if let vc = self.children.first as? PageViewController {
-            vc.shiftPageLeft()
+        if let currentPageViewController = self.getPageViewController() {
+            currentPageViewController.shiftPageLeft()
         }
     }
     
     @objc func didPushRight(sender: NSToolbarItemGroup) {
         print("didPushRight")
-        if let vc = self.children.first as? PageViewController {
-            vc.shiftPageRight()
+        if let currentPageViewController = self.getPageViewController() {
+            currentPageViewController.shiftPageRight()
         }
     }
     
@@ -532,6 +614,10 @@ extension BaseViewController: NSToolbarDelegate {
             pageDirection = .right
         }
         updatePageView()
+        
+        if let vc = getThumbnailViewController() {
+            vc.pageDirection = pageDirection
+        }
     }
     
     @objc func toolbarGroupSelectionChanged(sender: NSToolbarItemGroup) {

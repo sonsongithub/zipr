@@ -180,8 +180,24 @@ class PageViewController: UIPageViewController {
             self.page = count - 1
         }
         
+        NotificationCenter.default.addObserver(self, selector: #selector(setPage(notification:)), name: Notification.Name("SelectPage"), object: nil)
+        
         let vc = createChildViewController(self.page)
         self.setViewControllers([vc], direction: .forward, animated: false, completion: nil)
+    }
+    
+    @objc func setPage(notification : Notification) {
+        guard let userInfo = notification.userInfo,
+            let identifier = userInfo["identifier"] as? String,
+            let page = userInfo["page"] as? Int else {
+            return
+        }
+        
+        if identifier == archiver.identifier {
+            self.page = page
+            let vc = createChildViewController(self.page)
+            self.setViewControllers([vc], direction: .forward, animated: false, completion: nil)
+        }
     }
 }
 
