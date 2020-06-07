@@ -112,6 +112,8 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
                 thumbnailViewController.view.translatesAutoresizingMaskIntoConstraints = false
 
                 self.view.addSubview(thumbnailViewController.view)
+                self.addChild(thumbnailViewController)
+                thumbnailViewController.didMove(toParent: self)
                 
                 thumbnailViewController.view.heightAnchor.constraint(equalToConstant: 240).isActive = true
                 thumbnailViewController.view.leftAnchor.constraint(equalTo: self.view.leftAnchor).isActive = true
@@ -119,10 +121,7 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
                 constraint = thumbnailViewController.view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor, constant: 240)
                 constraint?.isActive = true
                 
-                self.addChild(thumbnailViewController)
-
-                thumbnailViewController.didMove(toParent: self)
-                
+                self.view.layoutIfNeeded()
                 DispatchQueue.main.async {
                     self.constraint?.constant = 0
                     UIView.animate(withDuration: 0.3, animations: {
@@ -130,7 +129,6 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
                     }) { (flag) in
                     }
                 }
-                
             }
         }
     }
