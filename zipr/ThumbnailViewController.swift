@@ -214,7 +214,6 @@ class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICol
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        print(indexPath)
         
         let userInfo: [String: Any] = [
             "page": indexPath.item,
@@ -223,7 +222,19 @@ class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICol
         NotificationCenter.default.post(name: Notification.Name("SelectPage"), object: nil, userInfo: userInfo)
         
     }
+    
+    func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        if let _ = cell as? MyCell {
+            archiver.cancel( indexPath.item)
+        }
+    }
 
+//    public override func collectionView(collectionView: UICollectionView, didEndDisplayingCell cell: UICollectionViewCell, forItemAtIndexPath indexPath: NSIndexPath) {
+//           if let cell = cell as? ImageCollectionViewCell {
+//               cell.cancelDownloadingImage()
+//           }
+//       }
+       
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "MyCell", for: indexPath) as! MyCell
         cell.textLabel.text = String(indexPath.row + 1)

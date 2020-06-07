@@ -217,6 +217,20 @@ class Archiver {
         }
     }
     
+    func cancel(_ page: Int) {
+        self.semaphore.signal()
+        
+        let i = self.taskQueue.count
+
+        self.taskQueue = self.taskQueue.filter({ (task) -> Bool in
+            return (page != task.page)
+        })
+
+        print("deleted -", i - self.taskQueue.count)
+        
+        self.semaphore.wait()
+    }
+    
     func pop() -> Void {
         
         self.semaphore.signal()
@@ -233,8 +247,10 @@ class Archiver {
 
         queue.async {
             do {
-// for test
-//                Thread.sleep(forTimeInterval: 1)
+                #if DEBUG
+                let timeInterval = Double.random(in: 0..<0.6)
+                Thread.sleep(forTimeInterval: timeInterval)
+                #endif
                 var d = Data()
                 
                 _ = try self.archive.extract(tempCurrentTask.entry, bufferSize: 20480, skipCRC32: true, progress: tempCurrentTask.progress, consumer: { (data) in
@@ -280,7 +296,6 @@ class Archiver {
         }
         
         let entry = entries[index]
-        print(index)
         let task = ArchiverTask(entry, page: index)
         taskQueue.append(task)
         
