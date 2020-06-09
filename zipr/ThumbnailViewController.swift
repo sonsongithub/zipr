@@ -164,14 +164,6 @@ class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICol
 
         self.view.addSubview(collectionView)
         
-        // 磨りガラス効果のViewを生成
-        func blurEffectView(fromBlurStyle style: UIBlurEffect.Style, frame: CGRect) -> UIVisualEffectView {
-            let effect = UIBlurEffect(style: style)
-            let blurView = UIVisualEffectView(effect: effect)
-            blurView.frame = frame
-            return blurView
-        }
-        
         let effect = UIBlurEffect(style: .regular)
         let blurView = UIVisualEffectView(effect: effect)
         
