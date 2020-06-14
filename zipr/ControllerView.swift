@@ -91,7 +91,6 @@ class ControllerView: UIView {
 
         rightButton.setImage(UIImage(systemName: "arrow.right"), for: .normal)
         rightButton.tintColor = .black
-        rightButton.backgroundColor = .red
 
         leftButton.translatesAutoresizingMaskIntoConstraints = false
         rightButton.translatesAutoresizingMaskIntoConstraints = false
