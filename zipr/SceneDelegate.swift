@@ -52,11 +52,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     UIApplication.shared.requestSceneSessionActivation(nil, userActivity: act, options: nil, errorHandler: nil)
                 }
             #else
-                if url.startAccessingSecurityScopedResource() {
+                if !url.startAccessingSecurityScopedResource() {
                     throw NSError(domain: "com.sonson.zipr", code: 10, userInfo: nil)
                 }
                 let data = try Data.init(contentsOf: url)
-                os_log("[zipr] url= %@", log: scribe, type: .default, data.count)
 
                 url.stopAccessingSecurityScopedResource()
             

@@ -78,7 +78,6 @@ class ControllerView: UIView {
         
         openButton.setImage(UIImage(systemName: "doc"), for: .normal)
         openButton.tintColor = .black
-        openButton.backgroundColor = .red
         openButton.translatesAutoresizingMaskIntoConstraints = false
         baseView.addSubview(openButton)
         
@@ -89,7 +88,6 @@ class ControllerView: UIView {
         
         leftButton.setImage(UIImage(systemName: "arrow.left"), for: .normal)
         leftButton.tintColor = .black
-        leftButton.backgroundColor = .red
 
         rightButton.setImage(UIImage(systemName: "arrow.right"), for: .normal)
         rightButton.tintColor = .black
