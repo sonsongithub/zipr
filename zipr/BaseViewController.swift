@@ -78,20 +78,115 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
     }
     
     var constraint: NSLayoutConstraint?
+    var toolbarConstraint: NSLayoutConstraint?
+    var toolbarHeightConstraint: NSLayoutConstraint?
     
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-        if let vc = getThumbnailViewController() {
-            if let v = touch.view {
+        if let v = touch.view {
+            if let vc = getThumbnailViewController() {
                 if v.isDescendant(of: vc.view) {
+                    return false
+                }
+            }
+            if let toolView = self.toolView {
+                if v.isDescendant(of: toolView) {
                     return false
                 }
             }
         }
         return true
     }
+    
+    var toolView: UIView?
+    
+    var controllerViewHeight: CGFloat {
+        if self.traitCollection.horizontalSizeClass == .regular {
+            return ControllerView.regularHeight + self.view.safeAreaInsets.top
+        } else {
+            if self.view.bounds.size.width < self.view.bounds.size.height {
+                return ControllerView.compactHeight + self.view.safeAreaInsets.top
+            } else {
+                return ControllerView.regularHeight + self.view.safeAreaInsets.top
+            }
+        }
+    }
+    
+    
+    var isAnimatingControllerView = false
+    
+    var isAnimatingThumbnailView = false
+    
+    func toggleToolbar() {
+        
+        guard !isAnimatingControllerView else { return }
+        
+        self.isAnimatingControllerView = true
+        
+        if let toolView = self.toolView {
+            
+            toolbarConstraint?.constant = -self.controllerViewHeight - self.view.safeAreaInsets.top
+            UIView.animate(withDuration: 0.3, animations: {
+                self.view.layoutIfNeeded()
+            }) { (flag) in
+                self.toolView = nil
+                toolView.removeFromSuperview()
+                self.isAnimatingControllerView = false
+            }
+        } else {
+            
+            let controllerView = ControllerView(frame: .zero)
+            
+            controllerView.translatesAutoresizingMaskIntoConstraints = false
+            
+            toolbarHeightConstraint = controllerView.heightAnchor.constraint(equalToConstant: self.controllerViewHeight)
+            toolbarHeightConstraint?.isActive = true
+
+            self.view.addSubview(controllerView)
+            controllerView.leftAnchor.constraint(equalTo: self.view.leftAnchor).isActive = true
+            controllerView.rightAnchor.constraint(equalTo: self.view.rightAnchor).isActive = true
+            toolbarConstraint = controllerView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: -self.controllerViewHeight - self.view.safeAreaInsets.top)
+            toolbarConstraint?.isActive = true
+            
+            self.view.layoutIfNeeded()
+            DispatchQueue.main.async {
+                self.toolbarConstraint?.constant = -self.view.safeAreaInsets.top
+                UIView.animate(withDuration: 0.3, animations: {
+                    self.view.layoutIfNeeded()
+                }) { (flag) in
+                    self.toolView = controllerView
+                    self.isAnimatingControllerView = false
+                }
+            }
+        }
+    }
+    
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+    }
+    
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        
+        toolbarHeightConstraint?.constant = controllerViewHeight
+        toolbarConstraint?.constant = -self.view.safeAreaInsets.top
+
+        UIView.animate(withDuration: 0.3, animations: {
+            self.view.layoutIfNeeded()
+        }) { (flag) in
+        }
+    }
+    
 
     func toggleThumbnails() {
+        
 
+//        #if targetEnvironment(macCatalyst)
+//        #else
+        toggleToolbar()
+//        #endif
+        
+        guard !isAnimatingThumbnailView else { return }
+        
+        isAnimatingThumbnailView = true
+        
         if let vc = getThumbnailViewController() {
             if let constraint = self.constraint {
                 constraint.constant = 240
@@ -102,6 +197,7 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
                 vc.view.removeFromSuperview()
                 vc.removeFromParent()
                 self.constraint = nil
+                self.isAnimatingThumbnailView = false
             }
         } else {
             
@@ -127,6 +223,7 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
                     UIView.animate(withDuration: 0.3, animations: {
                         self.view.layoutIfNeeded()
                     }) { (flag) in
+                        self.isAnimatingThumbnailView = false
                     }
                 }
             }
