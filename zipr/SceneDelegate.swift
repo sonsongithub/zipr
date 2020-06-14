@@ -44,21 +44,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
          
         do {
             #if targetEnvironment(macCatalyst)
-                let data = try Data.init(contentsOf: url)
-                os_log("[zipr] url= %@", log: scribe, type: .default, data.count)
-            
                 if let vc = getDisplayingBaseViewControllers().first {
-                    vc.open(data: data)
+                    vc.open(url: url)
                 } else {
                     let act = NSUserActivity(activityType: "a")
-                    act.userInfo = ["data": data]
+                    act.userInfo = ["url": url.absoluteString]
                     UIApplication.shared.requestSceneSessionActivation(nil, userActivity: act, options: nil, errorHandler: nil)
                 }
             #else
                 if !url.startAccessingSecurityScopedResource() {
                     throw NSError(domain: "com.sonson.zipr", code: 0, userInfo: nil)
                 }
-
                 let data = try Data.init(contentsOf: url)
                 os_log("[zipr] url= %@", log: scribe, type: .default, data.count)
 
@@ -88,6 +84,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             print(data.count)
             vc.needsOpenFilePicker = false
             vc.open(data: data)
+        } else if let urlString = connectionOptions.userActivities.first?.userInfo?["url"] as? String {
+            if let url = URL(string: urlString) {
+                vc.needsOpenFilePicker = false
+                vc.open(url: url)
+            }
         } else if let urlContext = connectionOptions.urlContexts.first {
             os_log("[zipr] url = %@", log: scribe, type: .error, urlContext.url.absoluteString)
             vc.needsOpenFilePicker = false
