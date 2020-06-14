@@ -176,12 +176,11 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
     
 
     func toggleThumbnails() {
-        
-
-//        #if targetEnvironment(macCatalyst)
-//        #else
+    
+        #if targetEnvironment(macCatalyst)
+        #else
         toggleToolbar()
-//        #endif
+        #endif
         
         guard !isAnimatingThumbnailView else { return }
         
@@ -236,34 +235,51 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
     }
     
     func open(data: Data) {
+        func open_(data: Data) {
+            DispatchQueue.main.async {
+                self.activityIndicatorView.startAnimating()
+                self.activityIndicatorView.isHidden = false
+            }
+            DispatchQueue.main.async {
+                do {
+                    let archiver = try Archiver(data: data)
+
+                    if let currentPageViewController = self.getPageViewController() {
+                        currentPageViewController.view.removeFromSuperview()
+                        currentPageViewController.removeFromParent()
+                    }
+                    let vc = PageViewController(archiver: archiver, page: self.page, pageDirection: self.pageDirection, pageType: self.pageType)
+                    self.addChild(vc)
+                    vc.view.frame = self.view.bounds
+                    self.view.addSubview(vc.view)
+                    vc.didMove(toParent: self)
+                    
+                } catch let error as NSError {
+                    print(error)
+                } catch {
+                    print("unknown error")
+                }
+                DispatchQueue.main.async {
+                    self.activityIndicatorView.stopAnimating()
+                    self.activityIndicatorView.isHidden = true
+                }
+            }
+        }
+        
         DispatchQueue.main.async {
             self.activityIndicatorView.startAnimating()
             self.activityIndicatorView.isHidden = false
         }
-        DispatchQueue.main.async {
-            do {
-                let archiver = try Archiver(data: data)
-
-                if let currentPageViewController = self.getPageViewController() {
-                    currentPageViewController.view.removeFromSuperview()
-                    currentPageViewController.removeFromParent()
-                }
-                let vc = PageViewController(archiver: archiver, page: self.page, pageDirection: self.pageDirection, pageType: self.pageType)
-                self.addChild(vc)
-                vc.view.frame = self.view.bounds
-                self.view.addSubview(vc.view)
-                vc.didMove(toParent: self)
-                
-            } catch let error as NSError {
-                print(error)
-            } catch {
-                print("unknown error")
+        
+        if let picker = picker {
+            picker.dismiss(animated: true) {
+                open_(data: data)
+                self.picker = nil
             }
-            DispatchQueue.main.async {
-                self.activityIndicatorView.stopAnimating()
-                self.activityIndicatorView.isHidden = true
-            }
+        } else {
+            open_(data: data)
         }
+        
     }
     
     func open(url: URL) {
