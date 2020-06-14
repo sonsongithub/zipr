@@ -182,7 +182,7 @@ class Archiver {
     let archive: Archive
     let entries: [Entry]
     let queue: DispatchQueue
-    let semaphore = DispatchSemaphore(value: 0)
+    let semaphore = DispatchSemaphore(value: 1)
     let identifier: String
     
     var reading = false
@@ -212,13 +212,15 @@ class Archiver {
     }
     
     func cancelAll() {
+        self.semaphore.wait()
         for e in taskQueue {
             e.progress.cancel()
         }
+        self.semaphore.signal()
     }
     
     func cancel(_ page: Int) {
-        self.semaphore.signal()
+        self.semaphore.wait()
         
         let i = self.taskQueue.count
 
@@ -228,22 +230,22 @@ class Archiver {
 
         print("deleted -", i - self.taskQueue.count)
         
-        self.semaphore.wait()
+        self.semaphore.signal()
     }
     
     func pop() -> Void {
         
-        self.semaphore.signal()
+        self.semaphore.wait()
         if currentTask != nil {
-            self.semaphore.wait()
+            self.semaphore.signal()
             return
         }
         guard let tempCurrentTask = taskQueue.popLast() else {
-            self.semaphore.wait()
+            self.semaphore.signal()
             return
         }
         currentTask = tempCurrentTask
-        self.semaphore.wait()
+        self.semaphore.signal()
 
         queue.async {
             do {
@@ -281,9 +283,9 @@ class Archiver {
                 NotificationCenter.default.post(name: Notification.Name("LoadedFailed"), object: nil, userInfo: userInfo)
             }
             
-            self.semaphore.signal()
-            self.currentTask = nil
             self.semaphore.wait()
+            self.currentTask = nil
+            self.semaphore.signal()
                 
             self.pop()
         }
