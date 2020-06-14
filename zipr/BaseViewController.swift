@@ -116,6 +116,42 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
     
     var isAnimatingThumbnailView = false
     
+    @objc func didChangePageDirectionSwitcher(_ sender: Any) {
+        if let segment = sender as? UISegmentedControl {
+            if segment.selectedSegmentIndex == 0 {
+                toggleToLeft()
+            } else if segment.selectedSegmentIndex == 1 {
+                toggleToRight()
+            }
+        }
+    }
+    
+    @objc func didChangePageTypeSwitcher(_ sender: Any) {
+        if let segment = sender as? UISegmentedControl {
+            if segment.selectedSegmentIndex == 0 {
+                toggleSingle()
+            } else if segment.selectedSegmentIndex == 1 {
+                toggleSpread()
+            }
+        }
+    }
+    
+    @objc func didPushOpenButton(_ sender: Any) {
+        openPicker()
+    }
+    
+    @objc func didPushLeftButton(_ sender: Any) {
+        if let currentPageViewController = self.getPageViewController() {
+            currentPageViewController.shiftPageLeft()
+        }
+    }
+    
+    @objc func didPushRightButton(_ sender: Any) {
+        if let currentPageViewController = self.getPageViewController() {
+            currentPageViewController.shiftPageRight()
+        }
+    }
+    
     func toggleToolbar() {
         
         guard !isAnimatingControllerView else { return }
@@ -135,6 +171,17 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
         } else {
             
             let controllerView = ControllerView(frame: .zero)
+            
+            controllerView.pageDirection = pageDirection
+            controllerView.pageType = pageType
+            
+            controllerView.pageDirectionSwitcher.addTarget(self, action: #selector(BaseViewController.didChangePageDirectionSwitcher(_:)), for: .valueChanged)
+            controllerView.pageTypeSwitcher.addTarget(self, action: #selector(BaseViewController.didChangePageTypeSwitcher(_:)), for: .valueChanged)
+            
+            controllerView.openButton.addTarget(self, action: #selector(BaseViewController.didPushOpenButton(_:)), for: .touchUpInside)
+            
+            controllerView.leftButton.addTarget(self, action: #selector(BaseViewController.didPushLeftButton(_:)), for: .touchUpInside)
+            controllerView.rightButton.addTarget(self, action: #selector(BaseViewController.didPushRightButton(_:)), for: .touchUpInside)
             
             controllerView.translatesAutoresizingMaskIntoConstraints = false
             
@@ -177,6 +224,8 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
 
     func toggleThumbnails() {
     
+        guard !isAnimatingControllerView && !isAnimatingThumbnailView else { return }
+        
         #if targetEnvironment(macCatalyst)
         #else
         toggleToolbar()
@@ -499,6 +548,18 @@ extension BaseViewController: UIDocumentPickerDelegate {
         }
         
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+            
+            if let vc = getThumbnailViewController() {
+                vc.view.removeFromSuperview()
+                vc.removeFromParent()
+            }
+            
+            if let view = self.toolView {
+                view.removeFromSuperview()
+                self.toolView = nil
+            }
+            
+            
             if let url = urls.first {
                 open(url: url)
             } else {

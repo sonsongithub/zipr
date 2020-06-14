@@ -18,6 +18,27 @@ class ControllerView: UIView {
     let pageDirectionSwitcher = UISegmentedControl(items: [UIImage(named: "left_direction")!, UIImage(named: "right_direction")!])
     let pageTypeSwitcher = UISegmentedControl(items: [UIImage(named: "single")!, UIImage(named: "book")!])
     
+    var pageDirection: PageDirection = .left {
+        didSet {
+            switch(pageDirection) {
+            case .left:
+                pageDirectionSwitcher.selectedSegmentIndex = 0
+            case .right:
+                pageDirectionSwitcher.selectedSegmentIndex = 1
+            }
+        }
+    }
+    var pageType: PageType = .single {
+        didSet {
+            switch(pageType) {
+            case .single:
+                pageTypeSwitcher.selectedSegmentIndex = 0
+            case .spread:
+                pageTypeSwitcher.selectedSegmentIndex = 1
+            }
+        }
+    }
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         prepareViews()
