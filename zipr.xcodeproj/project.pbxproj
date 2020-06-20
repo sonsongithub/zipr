@@ -12,6 +12,8 @@
 		14783344246E7C680087C3EE /* PageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14783343246E7C680087C3EE /* PageViewController.swift */; };
 		14783346246FA5980087C3EE /* SinglePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14783345246FA5980087C3EE /* SinglePageViewController.swift */; };
 		14783348246FEF300087C3EE /* SpreadPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14783347246FEF300087C3EE /* SpreadPageViewController.swift */; };
+		14A3B2F9249D925C0065D5DE /* ThumbnailViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A3B2F8249D925C0065D5DE /* ThumbnailViewCell.swift */; };
+		14A3B2FB249D929F0065D5DE /* ThumbnailViewFlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A3B2FA249D929F0065D5DE /* ThumbnailViewFlowLayout.swift */; };
 		14B5B2242466CA8F00E5E9A2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B5B2232466CA8F00E5E9A2 /* AppDelegate.swift */; };
 		14B5B2262466CA8F00E5E9A2 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B5B2252466CA8F00E5E9A2 /* SceneDelegate.swift */; };
 		14B5B22D2466CA9000E5E9A2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 14B5B22C2466CA9000E5E9A2 /* Assets.xcassets */; };
@@ -29,6 +31,8 @@
 		14783343246E7C680087C3EE /* PageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageViewController.swift; sourceTree = "<group>"; };
 		14783345246FA5980087C3EE /* SinglePageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SinglePageViewController.swift; sourceTree = "<group>"; };
 		14783347246FEF300087C3EE /* SpreadPageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpreadPageViewController.swift; sourceTree = "<group>"; };
+		14A3B2F8249D925C0065D5DE /* ThumbnailViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailViewCell.swift; sourceTree = "<group>"; };
+		14A3B2FA249D929F0065D5DE /* ThumbnailViewFlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailViewFlowLayout.swift; sourceTree = "<group>"; };
 		14B5B2202466CA8F00E5E9A2 /* zipr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = zipr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		14B5B2232466CA8F00E5E9A2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		14B5B2252466CA8F00E5E9A2 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -83,6 +87,8 @@
 				14F2249924684BD000630C87 /* BaseViewController.swift */,
 				142CD27D248F0A9E00347645 /* ControllerView.swift */,
 				14F0E6F6248A04A100C2A192 /* ThumbnailViewController.swift */,
+				14A3B2FA249D929F0065D5DE /* ThumbnailViewFlowLayout.swift */,
+				14A3B2F8249D925C0065D5DE /* ThumbnailViewCell.swift */,
 				14783343246E7C680087C3EE /* PageViewController.swift */,
 				14783345246FA5980087C3EE /* SinglePageViewController.swift */,
 				14783347246FEF300087C3EE /* SpreadPageViewController.swift */,
@@ -181,10 +187,12 @@
 				143371A32479618600EF650B /* Hash.swift in Sources */,
 				14F0E6F7248A04A100C2A192 /* ThumbnailViewController.swift in Sources */,
 				14F224922466F60C00630C87 /* Archiver.swift in Sources */,
+				14A3B2F9249D925C0065D5DE /* ThumbnailViewCell.swift in Sources */,
 				142CD27E248F0A9E00347645 /* ControllerView.swift in Sources */,
 				14B5B2242466CA8F00E5E9A2 /* AppDelegate.swift in Sources */,
 				14F2249A24684BD000630C87 /* BaseViewController.swift in Sources */,
 				14783348246FEF300087C3EE /* SpreadPageViewController.swift in Sources */,
+				14A3B2FB249D929F0065D5DE /* ThumbnailViewFlowLayout.swift in Sources */,
 				14783344246E7C680087C3EE /* PageViewController.swift in Sources */,
 				14B5B2262466CA8F00E5E9A2 /* SceneDelegate.swift in Sources */,
 			);

@@ -9,125 +9,13 @@
 import Foundation
 import UIKit
 
-class MyCell: UICollectionViewCell {
-    let textLabel = UILabel(frame: .zero)
-    let imageView = UIImageView(frame: .zero)
-    let activityIndicatorView = UIActivityIndicatorView(style: .large)
-    var identifier = ""
-    var page = 0
-    
-    override func prepareForReuse() {
-        super.prepareForReuse()
-        imageView.image = nil
-        activityIndicatorView.startAnimating()
-    }
-    
-    override init(frame: CGRect) {
-        super.init(frame: .zero)
-        
-        imageView.contentMode = .scaleAspectFit
-        
-        textLabel.translatesAutoresizingMaskIntoConstraints = false
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        activityIndicatorView.translatesAutoresizingMaskIntoConstraints = false
-        activityIndicatorView.hidesWhenStopped = true
-        
-        self.contentView.addSubview(textLabel)
-        self.contentView.addSubview(imageView)
-        self.contentView.addSubview(activityIndicatorView)
-        activityIndicatorView.startAnimating()
-        
-        textLabel.textAlignment = .center
-
-        textLabel.topAnchor.constraint(equalTo: self.contentView.topAnchor).isActive = true
-        textLabel.bottomAnchor.constraint(equalTo: self.contentView.bottomAnchor).isActive = true
-        textLabel.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor).isActive = true
-        textLabel.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor).isActive = true
-        
-        imageView.topAnchor.constraint(equalTo: self.contentView.topAnchor).isActive = true
-        imageView.bottomAnchor.constraint(equalTo: self.contentView.bottomAnchor).isActive = true
-        imageView.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor).isActive = true
-        imageView.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor).isActive = true
-        
-        activityIndicatorView.centerXAnchor.constraint(equalTo: self.contentView.centerXAnchor).isActive = true
-        activityIndicatorView.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor).isActive = true
-        
-        self.contentView.bringSubviewToFront(textLabel)
-        self.contentView.bringSubviewToFront(activityIndicatorView)
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(handle(notification:)), name: Notification.Name("Loaded"), object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(errorHandle(notification:)), name: Notification.Name("LoadedFailed"), object: nil)
-    }
-    
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-    }
-    
-    
-    @objc func errorHandle(notification : Notification) {
-        guard let userInfo = notification.userInfo,
-            let page = userInfo["page"] as? Int,
-            let sent_identifier = userInfo["identifier"] as? String
-        else {
-            return
-        }
-    }
-    
-    @objc func handle(notification : Notification) {
-        guard let userInfo = notification.userInfo,
-            let image = userInfo["image"] as? UIImage,
-            let page = userInfo["page"] as? Int,
-            let sent_identifier = userInfo["identifier"] as? String
-        else {
-            return
-        }
-        
-        DispatchQueue.main.async {
-            if sent_identifier == self.identifier {
-                if self.page == page {
-                    self.imageView.image = image
-                    self.activityIndicatorView.stopAnimating()
-                }
-            }
-        }
-        
-    }
-}
-
-class MyCollectionViewFlowLayout: UICollectionViewFlowLayout {
-    let pageDirection: PageDirection
-    
-    init(pageDirection: PageDirection) {
-        self.pageDirection = pageDirection
-        super.init()
-        //各々の設計に合わせて調整
-        self.scrollDirection = .horizontal
-        self.minimumInteritemSpacing = 10
-        self.minimumLineSpacing = 0
-        self.itemSize = CGSize(width: 180, height: 200)
-
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    override var flipsHorizontallyInOppositeLayoutDirection: Bool {
-        return (pageDirection == .left)
-    }
-    
-    override var developmentLayoutDirection: UIUserInterfaceLayoutDirection {
-        return UIUserInterfaceLayoutDirection.rightToLeft
-    }
-}
-
 class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
     let archiver: Archiver!
     let collectionView: UICollectionView!
     var pageDirection :PageDirection {
         didSet {
-            collectionView.setCollectionViewLayout(MyCollectionViewFlowLayout(pageDirection: pageDirection), animated: true)
+            collectionView.setCollectionViewLayout(ThumbnailViewFlowLayout(pageDirection: pageDirection), animated: true)
         }
     }
     
@@ -144,13 +32,13 @@ class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICol
         self.archiver = archiver
         self.collectionView = {
             //セルのレイアウト設計
-            let layout: UICollectionViewFlowLayout = MyCollectionViewFlowLayout(pageDirection: pageDirection)
+            let layout: UICollectionViewFlowLayout = ThumbnailViewFlowLayout(pageDirection: pageDirection)
 
             let collectionView = UICollectionView( frame: .zero, collectionViewLayout: layout)
             collectionView.backgroundColor = .clear
             collectionView.alwaysBounceHorizontal = true
             //セルの登録
-            collectionView.register(MyCell.self, forCellWithReuseIdentifier: "MyCell")
+            collectionView.register(ThumbnailViewCell.self, forCellWithReuseIdentifier: "ThumbnailViewCell")
             return collectionView
         }()
         super.init(nibName: nil, bundle: nil)
@@ -216,19 +104,13 @@ class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICol
     }
     
     func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        if let _ = cell as? MyCell {
+        if let _ = cell as? ThumbnailViewCell {
             archiver.cancel( indexPath.item)
         }
     }
 
-//    public override func collectionView(collectionView: UICollectionView, didEndDisplayingCell cell: UICollectionViewCell, forItemAtIndexPath indexPath: NSIndexPath) {
-//           if let cell = cell as? ImageCollectionViewCell {
-//               cell.cancelDownloadingImage()
-//           }
-//       }
-       
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "MyCell", for: indexPath) as! MyCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ThumbnailViewCell", for: indexPath) as! ThumbnailViewCell
         cell.textLabel.text = String(indexPath.row + 1)
         
         if archiver.read(at: indexPath.item) {
