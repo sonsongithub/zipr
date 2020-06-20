@@ -39,6 +39,10 @@ class PageViewController: UIPageViewController {
         fatalError("Can not create this view controller with NSCoder")
     }
     
+    override func becomeFirstResponder() -> Bool {
+        return false
+    }
+    
     func viewControllerForPageLeft(pageType: PageType, pageDirection: PageDirection, page: Int) -> (UIViewController, Int)? {
         
         var nextPage = 0
@@ -198,110 +202,6 @@ class PageViewController: UIPageViewController {
             let vc = createChildViewController(self.page)
             self.setViewControllers([vc], direction: .forward, animated: false, completion: nil)
         }
-    }
-}
-
-extension PageViewController {
-    
-    override var keyCommands: [UIKeyCommand]? {
-        #if targetEnvironment(macCatalyst)
-        // workaround
-        // Mac Catalyst can not handle space key which is registered by UIMenu API.
-        let commands = [
-            UIKeyCommand(title: "Page Forward", image: nil, action: #selector(pageForward(command:)), input: " ", modifierFlags: [], propertyList: nil, alternates: [], discoverabilityTitle: "Page Forward", attributes: [], state: .off),
-        ]
-        #else
-        let commands = [
-            UIKeyCommand(title: "Toggle Page", image: nil, action: #selector(togglePageType(command:)), input: "S", modifierFlags: [.command], propertyList: nil, alternates: [], discoverabilityTitle: "Page Left", attributes: [], state: .off),
-            UIKeyCommand(title: "Toggle Page", image: nil, action: #selector(togglePageType(command:)), input: "P", modifierFlags: [.command], propertyList: nil, alternates: [], discoverabilityTitle: "Page Left", attributes: [], state: .off),
-            
-            UIKeyCommand(title: "Open...", image: nil, action: #selector(handleFile(command:)), input: "O", modifierFlags: [.command], propertyList: nil, alternates: [], discoverabilityTitle: "Open...", attributes: [], state: .off),
-            UIKeyCommand(title: "Open as New Window", image: nil, action: #selector(handleFile(command:)), input: "O", modifierFlags: [.command, .shift], propertyList: nil, alternates: [], discoverabilityTitle: "Open as New Window", attributes: [], state: .off),
-            
-            UIKeyCommand(title: "Page Left", image: nil, action: #selector(handlePaging(command:)), input: UIKeyCommand.inputLeftArrow, modifierFlags: [], propertyList: nil, alternates: [], discoverabilityTitle: "Page Left", attributes: [], state: .off),
-            UIKeyCommand(title: "Page Right", image: nil, action: #selector(handlePaging(command:)), input: UIKeyCommand.inputRightArrow, modifierFlags: [], propertyList: nil, alternates: [], discoverabilityTitle: "Page Right", attributes: [], state: .off),
-            
-            UIKeyCommand(title: "Toggle Direction", image: nil, action: #selector(togglePageDirection(command:)), input: UIKeyCommand.inputLeftArrow, modifierFlags: [.command], propertyList: nil, alternates: [], discoverabilityTitle: "Toggle Direction", attributes: [], state: .off),
-            UIKeyCommand(title: "Toggle Direction", image: nil, action: #selector(togglePageDirection(command:)), input: UIKeyCommand.inputRightArrow, modifierFlags: [.command], propertyList: nil, alternates: [], discoverabilityTitle: "Toggle Direction", attributes: [], state: .off),
-            
-            UIKeyCommand(title: "Shift Page Left", image: nil, action: #selector(handlePaging(command:)), input: UIKeyCommand.inputLeftArrow, modifierFlags: [.alternate], propertyList: nil, alternates: [], discoverabilityTitle: "Shift Page Left", attributes: [], state: .off),
-            
-            UIKeyCommand(title: "Shift Page Right", image: nil, action: #selector(handlePaging(command:)), input: UIKeyCommand.inputRightArrow, modifierFlags: [.alternate], propertyList: nil, alternates: [], discoverabilityTitle: "Shift Page Right", attributes: [], state: .off),
-            
-            UIKeyCommand(title: "Page Forward", image: nil, action: #selector(pageForward(command:)), input: " ", modifierFlags: [], propertyList: nil, alternates: [], discoverabilityTitle: "Page Forward", attributes: [], state: .off),
-        ]
-        #endif
-
-        return commands
-    }
-    
-    @objc func togglePageType(command: UIKeyCommand) {
-        if command.modifierFlags.contains(.command) {
-            if command.input == "S" {
-                if let vc = self.parent as? BaseViewController {
-                    vc.toggleSingle()
-                }
-            }
-            if command.input == "P" {
-                if let vc = self.parent as? BaseViewController {
-                    vc.toggleSpread()
-                }
-            }
-        }
-    }
-    
-    @objc func togglePageDirection(command: UIKeyCommand) {
-        if command.modifierFlags.contains(.command) {
-            if command.input == UIKeyCommand.inputLeftArrow {
-                if let vc = self.parent as? BaseViewController {
-                    vc.toggleToLeft()
-                }
-            }
-            if command.input == UIKeyCommand.inputRightArrow {
-                if let vc = self.parent as? BaseViewController {
-                    vc.toggleToRight()
-                }
-            }
-        }
-    }
-    
-    @objc func handleFile(command: UIKeyCommand) {
-        if command.modifierFlags.contains(.command) {
-            if command.modifierFlags.contains(.shift) {
-                if command.input == "O" {
-                    UIApplication.shared.requestSceneSessionActivation(nil, userActivity: nil, options: nil, errorHandler: nil)
-                }
-            } else {
-                if command.input == "O" {
-                    if let vc = self.parent as? BaseViewController {
-                        vc.openPicker()
-                    }
-                }
-            }
-        }
-    }
-
-    @objc func handlePaging(command: UIKeyCommand) {
-        print("handlePaging")
-        if command.modifierFlags.contains(.alternate) {
-            if command.input == UIKeyCommand.inputLeftArrow {
-                shiftPageLeft()
-            }
-            if command.input == UIKeyCommand.inputRightArrow {
-                shiftPageRight()
-            }
-        } else {
-            if command.input == UIKeyCommand.inputLeftArrow {
-                pageLeft()
-            }
-            if command.input == UIKeyCommand.inputRightArrow {
-                pageRight()
-            }
-        }
-    }
-    
-    @objc func pageForward(command: UIKeyCommand) {
-        pageForward()
     }
 }
 

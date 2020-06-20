@@ -70,7 +70,6 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
         }.first
     }
 
-
     func getThumbnailViewController() -> ThumbnailViewController? {
         return self.children.compactMap { (vc) -> ThumbnailViewController? in
             return vc as? ThumbnailViewController
@@ -111,7 +110,6 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
         }
     }
     
-    
     var isAnimatingControllerView = false
     
     var isAnimatingThumbnailView = false
@@ -119,9 +117,9 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
     @objc func didChangePageDirectionSwitcher(_ sender: Any) {
         if let segment = sender as? UISegmentedControl {
             if segment.selectedSegmentIndex == 0 {
-                toggleToLeft()
+                toggleToLeft(sender)
             } else if segment.selectedSegmentIndex == 1 {
-                toggleToRight()
+                toggleToRight(sender)
             }
         }
     }
@@ -129,26 +127,10 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
     @objc func didChangePageTypeSwitcher(_ sender: Any) {
         if let segment = sender as? UISegmentedControl {
             if segment.selectedSegmentIndex == 0 {
-                toggleSingle()
+                toggleToSingle(sender)
             } else if segment.selectedSegmentIndex == 1 {
-                toggleSpread()
+                toggleToSpread(sender)
             }
-        }
-    }
-    
-    @objc func didPushOpenButton(_ sender: Any) {
-        openPicker()
-    }
-    
-    @objc func didPushLeftButton(_ sender: Any) {
-        if let currentPageViewController = self.getPageViewController() {
-            currentPageViewController.shiftPageLeft()
-        }
-    }
-    
-    @objc func didPushRightButton(_ sender: Any) {
-        if let currentPageViewController = self.getPageViewController() {
-            currentPageViewController.shiftPageRight()
         }
     }
     
@@ -175,13 +157,13 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
             controllerView.pageDirection = pageDirection
             controllerView.pageType = pageType
             
-            controllerView.pageDirectionSwitcher.addTarget(self, action: #selector(BaseViewController.didChangePageDirectionSwitcher(_:)), for: .valueChanged)
+            controllerView.pageDirectionSwitcher.addTarget(self, action: #selector(BaseViewController.togglePageDirectionOnToolbar(_:)), for: .valueChanged)
             controllerView.pageTypeSwitcher.addTarget(self, action: #selector(BaseViewController.didChangePageTypeSwitcher(_:)), for: .valueChanged)
             
-            controllerView.openButton.addTarget(self, action: #selector(BaseViewController.didPushOpenButton(_:)), for: .touchUpInside)
+            controllerView.openButton.addTarget(self, action: #selector(BaseViewController.open(_:)), for: .touchUpInside)
             
-            controllerView.leftButton.addTarget(self, action: #selector(BaseViewController.didPushLeftButton(_:)), for: .touchUpInside)
-            controllerView.rightButton.addTarget(self, action: #selector(BaseViewController.didPushRightButton(_:)), for: .touchUpInside)
+            controllerView.leftButton.addTarget(self, action: #selector(BaseViewController.pageLeft(_:)), for: .touchUpInside)
+            controllerView.rightButton.addTarget(self, action: #selector(BaseViewController.pageRight(_:)), for: .touchUpInside)
             
             controllerView.translatesAutoresizingMaskIntoConstraints = false
             
@@ -434,16 +416,7 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
         }
     }
     
-    func toggleSpread() {
-        pageType = .spread
-        updatePageView()
-        #if targetEnvironment(macCatalyst)
-        selectStyleToolbar?.setSelected(true, at: 0)
-        selectStyleToolbar?.setSelected(false, at: 1)
-        #endif
-    }
-    
-    func toggleSingle() {
+    @objc func toggleToSingle(_ sender: Any) {
         pageType = .single
         updatePageView()
         #if targetEnvironment(macCatalyst)
@@ -452,7 +425,16 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
         #endif
     }
     
-    func toggleToRight() {
+    @objc func toggleToSpread(_ sender: Any) {
+        pageType = .spread
+        updatePageView()
+        #if targetEnvironment(macCatalyst)
+        selectStyleToolbar?.setSelected(true, at: 0)
+        selectStyleToolbar?.setSelected(false, at: 1)
+        #endif
+    }
+    
+    @objc func toggleToRight(_ sender: Any) {
         pageDirection = .right
         updatePageView()
         #if targetEnvironment(macCatalyst)
@@ -464,7 +446,7 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
         }
     }
     
-    func toggleToLeft() {
+    @objc func toggleToLeft(_ sender: Any) {
         pageDirection = .left
         updatePageView()
         #if targetEnvironment(macCatalyst)
@@ -475,7 +457,6 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
             vc.pageDirection = .left
         }
     }
-    
     
     func openPicker() {
         
@@ -515,59 +496,97 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
 
 extension BaseViewController: UIDocumentPickerDelegate {
 
-        func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
-            
-            self.picker = nil
-            
-            DispatchQueue.main.async {
-                self.activityIndicatorView.stopAnimating()
-                self.activityIndicatorView.isHidden = true
+    func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+        
+        self.picker = nil
+        
+        DispatchQueue.main.async {
+            self.activityIndicatorView.stopAnimating()
+            self.activityIndicatorView.isHidden = true
+        }
+        
+        #if targetEnvironment(macCatalyst)
+        
+        if let vc = children.first as? PageViewController {
+            if vc.archiver != nil {
+                return
             }
-            
-            #if targetEnvironment(macCatalyst)
-            
-            if let vc = children.first as? PageViewController {
-                if vc.archiver != nil {
-                    return
-                }
-            }
-            
-            UIApplication.shared.connectedScenes.forEach { (scene) in
-                if let uiscene = scene as? UIWindowScene {
-                    uiscene.windows.forEach { (window) in
-                        if window.rootViewController == self {
-                            UIApplication.shared.requestSceneSessionDestruction(uiscene.session, options: .none) { (error) in
-                                print(error)
-                            }
+        }
+        
+        UIApplication.shared.connectedScenes.forEach { (scene) in
+            if let uiscene = scene as? UIWindowScene {
+                uiscene.windows.forEach { (window) in
+                    if window.rootViewController == self {
+                        UIApplication.shared.requestSceneSessionDestruction(uiscene.session, options: .none) { (error) in
+                            print(error)
                         }
                     }
                 }
             }
-            #endif
-
+        }
+        #endif
+    }
+    
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        
+        if let vc = getThumbnailViewController() {
+            vc.view.removeFromSuperview()
+            vc.removeFromParent()
         }
         
-        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-            
-            if let vc = getThumbnailViewController() {
-                vc.view.removeFromSuperview()
-                vc.removeFromParent()
-            }
-            
-            if let view = self.toolView {
-                view.removeFromSuperview()
-                self.toolView = nil
-            }
-            
-            
-            if let url = urls.first {
-                open(url: url)
-            } else {
-                self.activityIndicatorView.stopAnimating()
-                self.activityIndicatorView.isHidden = true
-            }
-            
+        if let view = self.toolView {
+            view.removeFromSuperview()
+            self.toolView = nil
         }
+        
+        if let url = urls.first {
+            open(url: url)
+        } else {
+            self.activityIndicatorView.stopAnimating()
+            self.activityIndicatorView.isHidden = true
+        }
+    }
+    
+    @objc func open(_ sender: Any) {
+        openPicker()
+    }
+
+    @objc func openAsANewWindow(_ sender: Any) {
+        let userActivity = NSUserActivity(
+          activityType: "com.sonson.multiwindow"
+        )
+        UIApplication.shared.requestSceneSessionActivation(nil, userActivity: userActivity, options: nil, errorHandler: nil)
+    }
+    
+    @objc func togglePageDirectionOnToolbar(_ sender: Any) {
+        
+        let selectedIndex: Int? = {
+            #if targetEnvironment(macCatalyst)
+            if let obj = sender as? NSToolbarItemGroup {
+                return obj.selectedIndex
+            }
+            #else
+            if let obj = sender as? UISegmentedControl {
+                return obj.selectedSegmentIndex
+            }
+            #endif
+            return nil
+        }();
+        
+        if let selectedIndex = selectedIndex {
+            if selectedIndex == 0 {
+                pageDirection = .left
+            } else if selectedIndex == 1 {
+                pageDirection = .right
+            }
+            updatePageView()
+
+            if let vc = getThumbnailViewController() {
+                vc.pageDirection = pageDirection
+            }
+        }
+    }
+    
 }
 
 #if targetEnvironment(macCatalyst)
@@ -611,92 +630,34 @@ extension BaseViewController {
         if action == #selector(openAsANewWindow(_:)) {
             return true
         }
-        if action == #selector(commnadPageLeft(_:)) {
+        if action == #selector(pageLeft(_:)) {
             return true
         }
-        if action == #selector(commandPageRight(_:)) {
+        if action == #selector(pageRight(_:)) {
             return true
         }
-        if action == #selector(commandPageForward(_:)) {
+        if action == #selector(pageForward(_:)) {
             return true
         }
-        if action == #selector(commandShiftPageLeft(_:)) {
+        if action == #selector(shiftPageLeft(_:)) {
             return true
         }
-        if action == #selector(commandShiftPageRight(_:)) {
+        if action == #selector(shiftPageRight(_:)) {
             return true
         }
-        if action == #selector(commandSwitchToSingle(_:)) {
+        if action == #selector(toggleToSpread(_:)) {
             return true
         }
-        if action == #selector(commandSwitchToSpread(_:)) {
+        if action == #selector(toggleToSpread(_:)) {
             return true
         }
-        if action == #selector(commandSwitchToLeftDirection(_:)) {
+        if action == #selector(toggleToLeft(_:)) {
             return true
         }
-        if action == #selector(commandSwitchToRightDirection(_:)) {
+        if action == #selector(toggleToRight(_:)) {
             return true
         }
         return false
-    }
-    
-    @objc func open(_ sender: UICommand) {
-        openPicker()
-    }
-
-    @objc func openAsANewWindow(_ sender: UICommand) {
-        let userActivity = NSUserActivity(
-          activityType: "com.sonson.multiwindow"
-        )
-        
-        UIApplication.shared.requestSceneSessionActivation(nil, userActivity: userActivity, options: nil, errorHandler: nil)
-    }
-    
-    @objc func commnadPageLeft(_ sender: UICommand) {
-        if let currentPageViewController = self.getPageViewController() {
-            currentPageViewController.pageLeft()
-        }
-    }
-    
-    @objc func commandPageRight(_ sender: UICommand) {
-        if let currentPageViewController = self.getPageViewController() {
-            currentPageViewController.pageRight()
-        }
-    }
-    
-    @objc func commandPageForward(_ sender: UICommand) {
-        if let currentPageViewController = self.getPageViewController() {
-            currentPageViewController.pageForward()
-        }
-    }
-    
-    @objc func commandShiftPageLeft(_ sender: UICommand) {
-        if let currentPageViewController = self.getPageViewController() {
-            currentPageViewController.shiftPageLeft()
-        }
-    }
-    
-    @objc func commandShiftPageRight(_ sender: UICommand) {
-        if let currentPageViewController = self.getPageViewController() {
-            currentPageViewController.shiftPageRight()
-        }
-    }
-    
-    @objc func commandSwitchToSingle(_ sender: UICommand) {
-        toggleSingle()
-    }
-    
-    @objc func commandSwitchToSpread(_ sender: UICommand) {
-        toggleSpread()
-    }
-    
-    @objc func commandSwitchToLeftDirection(_ sender: UICommand) {
-        toggleToLeft()
-    }
-    
-    @objc func commandSwitchToRightDirection(_ sender: UICommand) {
-        toggleToRight()
     }
 }
 #endif
@@ -707,32 +668,21 @@ extension BaseViewController: NSToolbarDelegate {
     func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
         
         if (itemIdentifier == NSToolbarItem.Identifier(rawValue: "selectStyle")) {
-            let group = NSToolbarItemGroup.init(itemIdentifier: NSToolbarItem.Identifier(rawValue: "selectStyle"), images: [UIImage(named: "book")!, UIImage(named: "single")!], selectionMode: .selectOne, labels: ["Spread", "Single"], target: self, action: #selector(BaseViewController.toolbarGroupSelectionChanged))
-                
+            let group = NSToolbarItemGroup.init(itemIdentifier: NSToolbarItem.Identifier(rawValue: "selectStyle"), images: [UIImage(named: "book")!, UIImage(named: "single")!], selectionMode: .selectOne, labels: ["Spread", "Single"], target: self, action: #selector(BaseViewController.togglePageTypeOnToolbar))
             group.setSelected(true, at: 0)
-            
             selectStyleToolbar = group
-                
             return group
         }
         
-        if (itemIdentifier == NSToolbarItem.Identifier(rawValue: "space")) {
-            let item = NSToolbarItem(itemIdentifier: NSToolbarItem.Identifier(rawValue: "goRight"))
-    //            item.image = UIImage(systemName: "photo")?.forNSToolbar()
-            item.target = self
-            item.label = ""
-            item.title = "   "
-            
-            
-            return item
-        }
-        
         if (itemIdentifier == NSToolbarItem.Identifier(rawValue: "selectDirection")) {
-            let group = NSToolbarItemGroup.init(itemIdentifier: NSToolbarItem.Identifier(rawValue: "selectDirection"), images: [UIImage(named: "left_direction")!, UIImage(named: "right_direction")!], selectionMode: .selectOne, labels: ["Left", "Right"], target: self, action: #selector(BaseViewController.toolbarGroupSelectionChanged_2))
+            let group = NSToolbarItemGroup.init(itemIdentifier: NSToolbarItem.Identifier(rawValue: "selectDirection"),
+                                                images: [UIImage(named: "left_direction")!, UIImage(named: "right_direction")!],
+                                                selectionMode: .selectOne,
+                                                labels: ["Left", "Right"],
+                                                target: self,
+                                                action: #selector(BaseViewController.togglePageDirectionOnToolbar))
             group.setSelected(true, at: 0)
-            
             selectDirectionToolbar = group
-                
             return group
         }
         
@@ -740,59 +690,38 @@ extension BaseViewController: NSToolbarDelegate {
             let item = NSToolbarItem(itemIdentifier: NSToolbarItem.Identifier(rawValue: "goLeft"))
             item.image = UIImage(systemName: "arrow.left")
             item.target = self
-            item.action = #selector(didPushLeft)
+            item.action = #selector(shiftPageLeft(_:))
             item.isBordered = true
-            
             return item
         }
+        
         if (itemIdentifier == NSToolbarItem.Identifier(rawValue: "goRight")) {
             let item = NSToolbarItem(itemIdentifier: NSToolbarItem.Identifier(rawValue: "goRight"))
             item.image = UIImage(systemName: "arrow.right")
             item.target = self
-            item.action = #selector(didPushRight)
+            item.action = #selector(shiftPageRight(_:))
             item.isBordered = true
-            
             return item
         }
         return nil
     }
     
-    @objc func didPushLeft(sender: NSToolbarItemGroup) {
-        print("didPushLeft")
-        if let currentPageViewController = self.getPageViewController() {
-            currentPageViewController.shiftPageLeft()
-        }
-    }
-    
-    @objc func didPushRight(sender: NSToolbarItemGroup) {
-        print("didPushRight")
-        if let currentPageViewController = self.getPageViewController() {
-            currentPageViewController.shiftPageRight()
-        }
-    }
-    
     func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        return [NSToolbarItem.Identifier.flexibleSpace, NSToolbarItem.Identifier(rawValue: "selectStyle"), NSToolbarItem.Identifier(rawValue: "selectDirection"), NSToolbarItem.Identifier.flexibleSpace, NSToolbarItem.Identifier(rawValue: "goLeft"), NSToolbarItem.Identifier(rawValue: "goRight")]
+        return [
+            NSToolbarItem.Identifier.flexibleSpace,
+            NSToolbarItem.Identifier(rawValue: "selectStyle"),
+            NSToolbarItem.Identifier(rawValue: "selectDirection"),
+            NSToolbarItem.Identifier.flexibleSpace,
+            NSToolbarItem.Identifier(rawValue: "goLeft"),
+            NSToolbarItem.Identifier(rawValue: "goRight")
+        ]
     }
         
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
         return self.toolbarDefaultItemIdentifiers(toolbar)
     }
     
-    @objc func toolbarGroupSelectionChanged_2(sender: NSToolbarItemGroup) {
-        if sender.selectedIndex == 0 {
-            pageDirection = .left
-        } else if sender.selectedIndex == 1 {
-            pageDirection = .right
-        }
-        updatePageView()
-        
-        if let vc = getThumbnailViewController() {
-            vc.pageDirection = pageDirection
-        }
-    }
-    
-    @objc func toolbarGroupSelectionChanged(sender: NSToolbarItemGroup) {
+    @objc func togglePageTypeOnToolbar(sender: NSToolbarItemGroup) {
         if sender.selectedIndex == 0 {
             pageType = .spread
         } else if sender.selectedIndex == 1 {
@@ -805,8 +734,7 @@ extension BaseViewController: NSToolbarDelegate {
 #endif
 
 extension BaseViewController: UIDropInteractionDelegate {
-    func dropInteraction(_ interaction: UIDropInteraction,
-                         canHandle session: UIDropSession) -> Bool {
+    func dropInteraction(_ interaction: UIDropInteraction, canHandle session: UIDropSession) -> Bool {
         let candidates = session.items.filter { (item) -> Bool in
             return item.itemProvider.hasItemConformingToTypeIdentifier("public.zip-archive")
         }
@@ -814,13 +742,10 @@ extension BaseViewController: UIDropInteractionDelegate {
     }
 
     func dropInteraction(_ interaction: UIDropInteraction, sessionDidUpdate session: UIDropSession) -> UIDropProposal {
-        // If a drag comes in, we copy the file. We don't want to consume it.
         return UIDropProposal(operation: .copy)
     }
 
     func dropInteraction(_ interaction: UIDropInteraction, performDrop session: UIDropSession) {
-        print(interaction)
-        
         if session.hasItemsConforming(toTypeIdentifiers: ["public.zip-archive"]) {
             session.items.forEach { (item) in
                 item.itemProvider.loadDataRepresentation(forTypeIdentifier: "public.zip-archive") { (data, error) in
@@ -831,6 +756,49 @@ extension BaseViewController: UIDropInteractionDelegate {
                     }
                 }
             }
+        }
+    }
+}
+
+extension BaseViewController {
+#if targetEnvironment(macCatalyst)
+#else
+    override func becomeFirstResponder() -> Bool {
+        return true
+    }
+    
+    override var keyCommands: [UIKeyCommand]? {
+        return AppDelegate.openCommands + AppDelegate.toggleCommands + AppDelegate.pagingCommands
+    }
+#endif
+
+    @objc func pageLeft(_ sender: Any) {
+        if let currentPageViewController = self.getPageViewController() {
+            currentPageViewController.shiftPageLeft()
+        }
+    }
+    
+    @objc func pageRight(_ sender: Any) {
+        if let currentPageViewController = self.getPageViewController() {
+            currentPageViewController.shiftPageRight()
+        }
+    }
+    
+    @objc func shiftPageLeft(_ sender: Any) {
+        if let currentPageViewController = self.getPageViewController() {
+            currentPageViewController.shiftPageLeft()
+        }
+    }
+    
+    @objc func shiftPageRight(_ sender: Any) {
+        if let currentPageViewController = self.getPageViewController() {
+            currentPageViewController.shiftPageRight()
+        }
+    }
+    
+    @objc func pageForward(_ sender: Any) {
+        if let currentPageViewController = self.getPageViewController() {
+            currentPageViewController.pageForward()
         }
     }
 }
