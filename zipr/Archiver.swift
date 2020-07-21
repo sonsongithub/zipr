@@ -187,6 +187,8 @@ class Archiver {
     
     var reading = false
     
+    let concurrentTestFlag = false
+    
     var taskQueue: [ArchiverTask] = Array([])
     var currentTask: ArchiverTask? = nil
     
@@ -250,8 +252,10 @@ class Archiver {
         queue.async {
             do {
                 #if DEBUG
-                let timeInterval = Double.random(in: 0..<0.6)
-                Thread.sleep(forTimeInterval: timeInterval)
+                if self.concurrentTestFlag {
+                    let timeInterval = Double.random(in: 0..<0.6)
+                    Thread.sleep(forTimeInterval: timeInterval)
+                }
                 #endif
                 var d = Data()
                 
