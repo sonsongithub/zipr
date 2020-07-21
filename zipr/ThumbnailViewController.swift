@@ -107,20 +107,53 @@ class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICol
             archiver.cancel( indexPath.item)
         }
     }
+    
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        print("scrollViewDidEndDecelerating")
+        self.collectionView.visibleCells.forEach { (cell) in
+            if let cell = cell as? ThumbnailViewCell {
+                if cell.imageView.image == nil {
+                    _ = archiver.read(at: cell.page)
+                }
+            }
+        }
+    }
+    
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        print("scrollViewDidEndDragging")
+        self.collectionView.visibleCells.forEach { (cell) in
+            if let cell = cell as? ThumbnailViewCell {
+                if cell.imageView.image == nil {
+                    _ = archiver.read(at: cell.page)
+                }
+            }
+        }
+
+    }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ThumbnailViewCell", for: indexPath) as! ThumbnailViewCell
         cell.textLabel.text = String(indexPath.row + 1)
         
-        if archiver.read(at: indexPath.item) {
-            cell.page = indexPath.item
-            cell.identifier = archiver.identifier
+        if collectionView.isDragging {
+            if let image = archiver.readFromCache(at: indexPath.item) {
+                cell.imageView.image = image
+                cell.page = indexPath.item
+                cell.identifier = archiver.identifier
+                cell.activityIndicatorView.stopAnimating()
+            } else {
+                cell.page = indexPath.item
+                cell.identifier = archiver.identifier
+            }
         } else {
-            // error
-            // no page
+            if cell.imageView.image == nil {
+                cell.page = indexPath.item
+                cell.identifier = archiver.identifier
+                _ = archiver.read(at: cell.page)
+            }
         }
-        
         return cell
     }
     
 }
+    
