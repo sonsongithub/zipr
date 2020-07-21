@@ -34,13 +34,12 @@ class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICol
         self.archiver = archiver
         self.startPage = page
         self.collectionView = {
-            //セルのレイアウト設計
             let layout: UICollectionViewFlowLayout = ThumbnailViewFlowLayout(pageDirection: pageDirection)
 
             let collectionView = UICollectionView( frame: .zero, collectionViewLayout: layout)
             collectionView.backgroundColor = .clear
             collectionView.alwaysBounceHorizontal = true
-            //セルの登録
+            
             collectionView.register(ThumbnailViewCell.self, forCellWithReuseIdentifier: "ThumbnailViewCell")
             return collectionView
         }()
@@ -96,13 +95,11 @@ class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICol
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        
         let userInfo: [String: Any] = [
             "page": indexPath.item,
             "identifier": archiver.identifier
         ]
         NotificationCenter.default.post(name: Notification.Name("SelectPage"), object: nil, userInfo: userInfo)
-        
     }
     
     func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {

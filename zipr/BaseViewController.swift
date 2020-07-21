@@ -13,20 +13,18 @@ import os
 
 class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
     let activityIndicatorView: UIActivityIndicatorView = UIActivityIndicatorView(style: .large)
-
-    var page: Int = 0
-    var needsOpenFilePicker = true
+    
     var pageType: PageType = .spread
     var pageDirection: PageDirection = .left
     
-    var picker: UIDocumentPickerViewController?
+    var documentPickerViewController: UIDocumentPickerViewController?
 
     #if targetEnvironment(macCatalyst)
     var selectStyleToolbar: NSToolbarItemGroup?
     var selectDirectionToolbar: NSToolbarItemGroup?
     #endif
     
-    func getCurrentScene() -> UIWindowScene? {
+    var currentScene: UIWindowScene? {
         return UIApplication.shared.connectedScenes.compactMap { (scene) -> UIWindowScene? in
             return scene as? UIWindowScene
         }
@@ -37,17 +35,181 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
             return (candidate != nil)
         }
     }
+    
+    var currentPageViewController: PageViewController? {
+        return self.children.compactMap { (vc) -> PageViewController? in
+            return vc as? PageViewController
+        }.first
+    }
 
+    var currentThumbnailViewController: ThumbnailViewController? {
+        return self.children.compactMap { (vc) -> ThumbnailViewController? in
+            return vc as? ThumbnailViewController
+        }.first
+    }
+    
+    var needsOpenFilePicker = true
+    
+    var isOpenedAnyFile: Bool {
+        return (currentPageViewController != nil)
+    }
+    
+    func open(data: Data) {
+        func open_(data: Data) {
+            DispatchQueue.main.async {
+                self.activityIndicatorView.startAnimating()
+                self.activityIndicatorView.isHidden = false
+            }
+            DispatchQueue.main.async {
+                do {
+                    let archiver = try Archiver(data: data)
+
+                    if let currentPageViewController = self.currentPageViewController {
+                        currentPageViewController.view.removeFromSuperview()
+                        currentPageViewController.removeFromParent()
+                    }
+                    let vc = PageViewController(archiver: archiver, page: 0, pageDirection: self.pageDirection, pageType: self.pageType)
+                    self.addChild(vc)
+                    vc.view.frame = self.view.bounds
+                    self.view.addSubview(vc.view)
+                    vc.didMove(toParent: self)
+                    
+                } catch {
+                    print(error)
+                }
+                DispatchQueue.main.async {
+                    self.activityIndicatorView.stopAnimating()
+                    self.activityIndicatorView.isHidden = true
+                }
+            }
+        }
+        
+        DispatchQueue.main.async {
+            self.activityIndicatorView.startAnimating()
+            self.activityIndicatorView.isHidden = false
+        }
+        
+        if let picker = documentPickerViewController {
+            picker.dismiss(animated: true) {
+                open_(data: data)
+                self.documentPickerViewController = nil
+            }
+        } else {
+            open_(data: data)
+        }
+        
+    }
+    
+    func open(url: URL) {
+        
+        func open_(url: URL) {
+            DispatchQueue.main.async {
+                do {
+                    let archiver = try Archiver(url: url)
+                    if let currentPageViewController = self.currentPageViewController {
+                        currentPageViewController.view.removeFromSuperview()
+                        currentPageViewController.removeFromParent()
+                    }
+                    let vc = PageViewController(archiver: archiver, page: 0, pageDirection: self.pageDirection, pageType: self.pageType)
+                    self.addChild(vc)
+                    vc.view.frame = self.view.bounds
+                    self.view.addSubview(vc.view)
+                    vc.didMove(toParent: self)
+                    
+                } catch {
+                    print(error)
+                }
+                DispatchQueue.main.async {
+                    self.activityIndicatorView.stopAnimating()
+                    self.activityIndicatorView.isHidden = true
+                }
+            }
+        }
+        
+        DispatchQueue.main.async {
+            self.activityIndicatorView.startAnimating()
+            self.activityIndicatorView.isHidden = false
+        }
+        
+        if let picker = documentPickerViewController {
+            picker.dismiss(animated: true) {
+                open_(url: url)
+                self.documentPickerViewController = nil
+            }
+        } else {
+            open_(url: url)
+        }
+    }
+    
+    func openPicker() {
+        
+        self.activityIndicatorView.isHidden = false
+        self.activityIndicatorView.startAnimating()
+        self.view.bringSubviewToFront(self.activityIndicatorView)
+
+        DispatchQueue.main.async {
+            self.documentPickerViewController = UIDocumentPickerViewController.init(documentTypes: ["public.zip-archive"], in: .import)
+            self.documentPickerViewController?.delegate = self
+            if let picker = self.documentPickerViewController {
+                self.present(picker, animated: true, completion: nil)
+            }
+        }
+    }
+    
+    func updatePageView() {
+
+        if let currentPageViewController = currentPageViewController {
+            
+            if let archiver = currentPageViewController.archiver {
+                let page = currentPageViewController.page
+                currentPageViewController.view.removeFromSuperview()
+                currentPageViewController.removeFromParent()
+
+                let vc = PageViewController(archiver: archiver, page: page, pageDirection: pageDirection, pageType: pageType)
+                self.addChild(vc)
+                vc.view.frame = self.view.bounds
+                self.view.addSubview(vc.view)
+                vc.didMove(toParent: self)
+                
+                self.view.sendSubviewToBack(vc.view)
+            }
+        }
+    }
+
+    // MARK: - Thumbnail & Controller
+    
+    var isAnimatingControllerView = false
+    
+    var isAnimatingThumbnailView = false
+    
+    var constraint: NSLayoutConstraint?
+    var toolbarConstraint: NSLayoutConstraint?
+    var toolbarHeightConstraint: NSLayoutConstraint?
+
+    var toolView: UIView?
+    
+    var controllerViewHeight: CGFloat {
+        if self.traitCollection.horizontalSizeClass == .regular {
+            return ControllerView.regularHeight + self.view.safeAreaInsets.top
+        } else {
+            if self.view.bounds.size.width < self.view.bounds.size.height {
+                return ControllerView.compactHeight + self.view.safeAreaInsets.top
+            } else {
+                return ControllerView.regularHeight + self.view.safeAreaInsets.top
+            }
+        }
+    }
+    
     #if targetEnvironment(macCatalyst)
     var titleBarHidden: Bool {
         get {
-            if let windowScene = getCurrentScene() {
+            if let windowScene = currentScene {
                 return (windowScene.titlebar?.toolbar == nil)
             }
             return false
         }
         set {
-            if let windowScene = getCurrentScene() {
+            if let windowScene = currentScene {
                 guard newValue != (windowScene.titlebar?.toolbar == nil) else { return }
                 if newValue {
                     windowScene.titlebar?.toolbar = nil
@@ -63,76 +225,6 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
         }
     }
     #endif
-    
-    func getPageViewController() -> PageViewController? {
-        return self.children.compactMap { (vc) -> PageViewController? in
-            return vc as? PageViewController
-        }.first
-    }
-
-    func getThumbnailViewController() -> ThumbnailViewController? {
-        return self.children.compactMap { (vc) -> ThumbnailViewController? in
-            return vc as? ThumbnailViewController
-        }.first
-    }
-    
-    var constraint: NSLayoutConstraint?
-    var toolbarConstraint: NSLayoutConstraint?
-    var toolbarHeightConstraint: NSLayoutConstraint?
-    
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-        if let v = touch.view {
-            if let vc = getThumbnailViewController() {
-                if v.isDescendant(of: vc.view) {
-                    return false
-                }
-            }
-            if let toolView = self.toolView {
-                if v.isDescendant(of: toolView) {
-                    return false
-                }
-            }
-        }
-        return true
-    }
-    
-    var toolView: UIView?
-    
-    var controllerViewHeight: CGFloat {
-        if self.traitCollection.horizontalSizeClass == .regular {
-            return ControllerView.regularHeight + self.view.safeAreaInsets.top
-        } else {
-            if self.view.bounds.size.width < self.view.bounds.size.height {
-                return ControllerView.compactHeight + self.view.safeAreaInsets.top
-            } else {
-                return ControllerView.regularHeight + self.view.safeAreaInsets.top
-            }
-        }
-    }
-    
-    var isAnimatingControllerView = false
-    
-    var isAnimatingThumbnailView = false
-    
-    @objc func didChangePageDirectionSwitcher(_ sender: Any) {
-        if let segment = sender as? UISegmentedControl {
-            if segment.selectedSegmentIndex == 0 {
-                toggleToLeft(sender)
-            } else if segment.selectedSegmentIndex == 1 {
-                toggleToRight(sender)
-            }
-        }
-    }
-    
-    @objc func didChangePageTypeSwitcher(_ sender: Any) {
-        if let segment = sender as? UISegmentedControl {
-            if segment.selectedSegmentIndex == 0 {
-                toggleToSingle(sender)
-            } else if segment.selectedSegmentIndex == 1 {
-                toggleToSpread(sender)
-            }
-        }
-    }
     
     func toggleToolbar() {
         
@@ -158,7 +250,7 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
             controllerView.pageType = pageType
             
             controllerView.pageDirectionSwitcher.addTarget(self, action: #selector(BaseViewController.togglePageDirectionOnToolbar(_:)), for: .valueChanged)
-            controllerView.pageTypeSwitcher.addTarget(self, action: #selector(BaseViewController.didChangePageTypeSwitcher(_:)), for: .valueChanged)
+            controllerView.pageTypeSwitcher.addTarget(self, action: #selector(BaseViewController.togglePageTypeOnToolbar(_:)), for: .valueChanged)
             
             controllerView.openButton.addTarget(self, action: #selector(BaseViewController.open(_:)), for: .touchUpInside)
             
@@ -188,28 +280,15 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
             }
         }
     }
-    
-    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-    }
-    
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        
-        toolbarHeightConstraint?.constant = controllerViewHeight
-        toolbarConstraint?.constant = -self.view.safeAreaInsets.top
-
-        UIView.animate(withDuration: 0.3, animations: {
-            self.view.layoutIfNeeded()
-        }) { (flag) in
-        }
-    }
-    
 
     func toggleThumbnails() {
     
-        guard !isAnimatingControllerView && !isAnimatingThumbnailView else { return }
         
         #if targetEnvironment(macCatalyst)
+        guard !isAnimatingThumbnailView else { return }
+        titleBarHidden = !titleBarHidden
         #else
+        guard !isAnimatingControllerView && !isAnimatingThumbnailView else { return }
         toggleToolbar()
         #endif
         
@@ -217,7 +296,7 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
         
         isAnimatingThumbnailView = true
         
-        if let vc = getThumbnailViewController() {
+        if let vc = currentThumbnailViewController {
             if let constraint = self.constraint {
                 constraint.constant = 240
             }
@@ -231,9 +310,14 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
             }
         } else {
             
-            if let vc = getPageViewController() {
+            if let vc = currentPageViewController {
+                
+                var page = 0
+                if let vc = currentPageViewController {
+                    page = vc.page
+                }
 
-                let thumbnailViewController = ThumbnailViewController(archiver: vc.archiver, pageDirection: pageDirection)
+                let thumbnailViewController = ThumbnailViewController(archiver: vc.archiver, pageDirection: pageDirection, startAt: page)
                 
                 thumbnailViewController.view.translatesAutoresizingMaskIntoConstraints = false
 
@@ -246,6 +330,7 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
                 thumbnailViewController.view.rightAnchor.constraint(equalTo: self.view.rightAnchor).isActive = true
                 constraint = thumbnailViewController.view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor, constant: 240)
                 constraint?.isActive = true
+
                 
                 self.view.layoutIfNeeded()
                 DispatchQueue.main.async {
@@ -259,102 +344,11 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
             }
         }
     }
-    
+}
 
-    func isOpenedAnyFile() -> Bool {
-        return (getPageViewController() != nil)
-    }
-    
-    func open(data: Data) {
-        func open_(data: Data) {
-            DispatchQueue.main.async {
-                self.activityIndicatorView.startAnimating()
-                self.activityIndicatorView.isHidden = false
-            }
-            DispatchQueue.main.async {
-                do {
-                    let archiver = try Archiver(data: data)
+// MARK: - UIViewController
 
-                    if let currentPageViewController = self.getPageViewController() {
-                        currentPageViewController.view.removeFromSuperview()
-                        currentPageViewController.removeFromParent()
-                    }
-                    let vc = PageViewController(archiver: archiver, page: self.page, pageDirection: self.pageDirection, pageType: self.pageType)
-                    self.addChild(vc)
-                    vc.view.frame = self.view.bounds
-                    self.view.addSubview(vc.view)
-                    vc.didMove(toParent: self)
-                    
-                } catch let error as NSError {
-                    print(error)
-                } catch {
-                    print("unknown error")
-                }
-                DispatchQueue.main.async {
-                    self.activityIndicatorView.stopAnimating()
-                    self.activityIndicatorView.isHidden = true
-                }
-            }
-        }
-        
-        DispatchQueue.main.async {
-            self.activityIndicatorView.startAnimating()
-            self.activityIndicatorView.isHidden = false
-        }
-        
-        if let picker = picker {
-            picker.dismiss(animated: true) {
-                open_(data: data)
-                self.picker = nil
-            }
-        } else {
-            open_(data: data)
-        }
-        
-    }
-    
-    func open(url: URL) {
-        
-        func open_(url: URL) {
-            DispatchQueue.main.async {
-                do {
-                    let archiver = try Archiver(url: url)
-                    if let currentPageViewController = self.getPageViewController() {
-                        currentPageViewController.view.removeFromSuperview()
-                        currentPageViewController.removeFromParent()
-                    }
-                    let vc = PageViewController(archiver: archiver, page: self.page, pageDirection: self.pageDirection, pageType: self.pageType)
-                    self.addChild(vc)
-                    vc.view.frame = self.view.bounds
-                    self.view.addSubview(vc.view)
-                    vc.didMove(toParent: self)
-                    
-                } catch let error as NSError {
-                    print(error)
-                } catch {
-                    print("unknown error")
-                }
-                DispatchQueue.main.async {
-                    self.activityIndicatorView.stopAnimating()
-                    self.activityIndicatorView.isHidden = true
-                }
-            }
-        }
-        
-        DispatchQueue.main.async {
-            self.activityIndicatorView.startAnimating()
-            self.activityIndicatorView.isHidden = false
-        }
-        
-        if let picker = picker {
-            picker.dismiss(animated: true) {
-                open_(url: url)
-                self.picker = nil
-            }
-        } else {
-            open_(url: url)
-        }
-    }
+extension BaseViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -373,6 +367,12 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
         target: self,
         action: #selector(BaseViewController.tapped(_:)))
         
+        self.view.addSubview(activityIndicatorView)
+        
+        self.activityIndicatorView.translatesAutoresizingMaskIntoConstraints = false
+        self.activityIndicatorView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor).isActive = true
+        self.activityIndicatorView.centerYAnchor.constraint(equalTo: self.view.centerYAnchor).isActive = true
+        
         tapGesture.cancelsTouchesInView = false
         tapGesture.delegate = self
         self.view.addGestureRecognizer(tapGesture)
@@ -383,6 +383,41 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
         if self.needsOpenFilePicker {
             self.openPicker()
         }
+    }
+    
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        
+        toolbarHeightConstraint?.constant = controllerViewHeight
+        toolbarConstraint?.constant = -self.view.safeAreaInsets.top
+
+        UIView.animate(withDuration: 0.3, animations: {
+            self.view.layoutIfNeeded()
+        }) { (flag) in
+        }
+    }
+}
+
+// MARK: - UIGestureRecongnizer
+
+extension BaseViewController {
+    
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        if self.currentPageViewController == nil {
+            return false
+        }
+        if let v = touch.view {
+            if let vc = currentThumbnailViewController {
+                if v.isDescendant(of: vc.view) {
+                    return false
+                }
+            }
+            if let toolView = self.toolView {
+                if v.isDescendant(of: toolView) {
+                    return false
+                }
+            }
+        }
+        return true
     }
     
     @objc func tapped(_ sender: UITapGestureRecognizer){
@@ -396,109 +431,31 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
             let rightArea = CGRect(x: self.view.bounds.width * (1 - tapAreaWidthRatio), y: self.view.bounds.height * (1 - tapAreaHeightRatio) * 0.5, width: self.view.bounds.width * tapAreaWidthRatio, height: self.view.bounds.height * tapAreaHeightRatio)
             
             if leftArea.contains(tap) {
-                if let currentPageViewController = self.getPageViewController() {
+                if let currentPageViewController = self.currentPageViewController {
                     currentPageViewController.pageLeft()
                 }
             } else if rightArea.contains(tap) {
-                if let currentPageViewController = self.getPageViewController() {
+                if let currentPageViewController = self.currentPageViewController {
                     currentPageViewController.pageRight()
                 }
             } else {
-                #if targetEnvironment(macCatalyst)
                 let rect = self.view.bounds.inset(by: self.view.safeAreaInsets)
                 if rect.contains(tap) {
-                    titleBarHidden = !titleBarHidden
+                    toggleThumbnails()
                 }
-                #endif
-                toggleThumbnails()
             }
             
         }
     }
-    
-    @objc func toggleToSingle(_ sender: Any) {
-        pageType = .single
-        updatePageView()
-        #if targetEnvironment(macCatalyst)
-        selectStyleToolbar?.setSelected(false, at: 0)
-        selectStyleToolbar?.setSelected(true, at: 1)
-        #endif
-    }
-    
-    @objc func toggleToSpread(_ sender: Any) {
-        pageType = .spread
-        updatePageView()
-        #if targetEnvironment(macCatalyst)
-        selectStyleToolbar?.setSelected(true, at: 0)
-        selectStyleToolbar?.setSelected(false, at: 1)
-        #endif
-    }
-    
-    @objc func toggleToRight(_ sender: Any) {
-        pageDirection = .right
-        updatePageView()
-        #if targetEnvironment(macCatalyst)
-        selectDirectionToolbar?.setSelected(false, at: 0)
-        selectDirectionToolbar?.setSelected(true, at: 1)
-        #endif
-        if let vc = getThumbnailViewController() {
-            vc.pageDirection = .right
-        }
-    }
-    
-    @objc func toggleToLeft(_ sender: Any) {
-        pageDirection = .left
-        updatePageView()
-        #if targetEnvironment(macCatalyst)
-        selectDirectionToolbar?.setSelected(true, at: 0)
-        selectDirectionToolbar?.setSelected(false, at: 1)
-        #endif
-        if let vc = getThumbnailViewController() {
-            vc.pageDirection = .left
-        }
-    }
-    
-    func openPicker() {
-        
-        self.activityIndicatorView.isHidden = false
-        self.activityIndicatorView.startAnimating()
-
-        DispatchQueue.main.async {
-            self.picker = UIDocumentPickerViewController.init(documentTypes: ["public.zip-archive"], in: .import)
-            self.picker?.delegate = self
-            if let picker = self.picker {
-                self.present(picker, animated: true, completion: nil)
-            }
-        }
-    }
-    
-    func updatePageView() {
-
-        if let currentPageViewController = self.getPageViewController() {
-            
-            if let archiver = currentPageViewController.archiver {
-                page = currentPageViewController.page
-                currentPageViewController.view.removeFromSuperview()
-                currentPageViewController.removeFromParent()
-
-                let vc = PageViewController(archiver: archiver, page: page, pageDirection: pageDirection, pageType: pageType)
-                self.addChild(vc)
-                vc.view.frame = self.view.bounds
-                self.view.addSubview(vc.view)
-                vc.didMove(toParent: self)
-                
-                self.view.sendSubviewToBack(vc.view)
-            }
-        }
-    }
-    
 }
+
+// MARK: - UIDocumentPickerDelegate
 
 extension BaseViewController: UIDocumentPickerDelegate {
 
     func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
         
-        self.picker = nil
+        self.documentPickerViewController = nil
         
         DispatchQueue.main.async {
             self.activityIndicatorView.stopAnimating()
@@ -529,7 +486,7 @@ extension BaseViewController: UIDocumentPickerDelegate {
     
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
         
-        if let vc = getThumbnailViewController() {
+        if let vc = currentThumbnailViewController {
             vc.view.removeFromSuperview()
             vc.removeFromParent()
         }
@@ -546,52 +503,23 @@ extension BaseViewController: UIDocumentPickerDelegate {
             self.activityIndicatorView.isHidden = true
         }
     }
-    
-    @objc func open(_ sender: Any) {
-        openPicker()
-    }
-
-    @objc func openAsANewWindow(_ sender: Any) {
-        let userActivity = NSUserActivity(
-          activityType: "com.sonson.multiwindow"
-        )
-        UIApplication.shared.requestSceneSessionActivation(nil, userActivity: userActivity, options: nil, errorHandler: nil)
-    }
-    
-    @objc func togglePageDirectionOnToolbar(_ sender: Any) {
-        
-        let selectedIndex: Int? = {
-            #if targetEnvironment(macCatalyst)
-            if let obj = sender as? NSToolbarItemGroup {
-                return obj.selectedIndex
-            }
-            #else
-            if let obj = sender as? UISegmentedControl {
-                return obj.selectedSegmentIndex
-            }
-            #endif
-            return nil
-        }();
-        
-        if let selectedIndex = selectedIndex {
-            if selectedIndex == 0 {
-                pageDirection = .left
-            } else if selectedIndex == 1 {
-                pageDirection = .right
-            }
-            updatePageView()
-
-            if let vc = getThumbnailViewController() {
-                vc.pageDirection = pageDirection
-            }
-        }
-    }
-    
 }
 
-#if targetEnvironment(macCatalyst)
+// MARK: - UIKeyCommand for
+
 extension BaseViewController {
+
+    #if targetEnvironment(macCatalyst)
+    #else
+    override func becomeFirstResponder() -> Bool {
+        return true
+    }
     
+    override var keyCommands: [UIKeyCommand]? {
+        return AppDelegate.openCommands + AppDelegate.toggleCommands + AppDelegate.pagingCommands
+    }
+    #endif
+
     override func validate(_ command: UICommand) {
         if let dict = command.propertyList as? [String: String] {
             if dict["PageType"] == "Single" {
@@ -660,7 +588,8 @@ extension BaseViewController {
         return false
     }
 }
-#endif
+
+// MARK: - Toolbar for Mac Catalyst
 
 #if targetEnvironment(macCatalyst)
 extension BaseViewController: NSToolbarDelegate {
@@ -720,18 +649,10 @@ extension BaseViewController: NSToolbarDelegate {
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
         return self.toolbarDefaultItemIdentifiers(toolbar)
     }
-    
-    @objc func togglePageTypeOnToolbar(sender: NSToolbarItemGroup) {
-        if sender.selectedIndex == 0 {
-            pageType = .spread
-        } else if sender.selectedIndex == 1 {
-            pageType = .single
-        }
-        updatePageView()
-    }
-    
 }
 #endif
+
+// MARK: - Drag and drop
 
 extension BaseViewController: UIDropInteractionDelegate {
     func dropInteraction(_ interaction: UIDropInteraction, canHandle session: UIDropSession) -> Bool {
@@ -760,45 +681,145 @@ extension BaseViewController: UIDropInteractionDelegate {
     }
 }
 
-extension BaseViewController {
-#if targetEnvironment(macCatalyst)
-#else
-    override func becomeFirstResponder() -> Bool {
-        return true
-    }
-    
-    override var keyCommands: [UIKeyCommand]? {
-        return AppDelegate.openCommands + AppDelegate.toggleCommands + AppDelegate.pagingCommands
-    }
-#endif
+// MARK: - Methods for control
 
+extension BaseViewController {
+    
     @objc func pageLeft(_ sender: Any) {
-        if let currentPageViewController = self.getPageViewController() {
-            currentPageViewController.shiftPageLeft()
+        if let currentPageViewController = self.currentPageViewController {
+            currentPageViewController.pageLeft()
         }
     }
     
     @objc func pageRight(_ sender: Any) {
-        if let currentPageViewController = self.getPageViewController() {
-            currentPageViewController.shiftPageRight()
+        if let currentPageViewController = self.currentPageViewController {
+            currentPageViewController.pageRight()
         }
     }
     
     @objc func shiftPageLeft(_ sender: Any) {
-        if let currentPageViewController = self.getPageViewController() {
+        if let currentPageViewController = self.currentPageViewController {
             currentPageViewController.shiftPageLeft()
         }
     }
     
     @objc func shiftPageRight(_ sender: Any) {
-        if let currentPageViewController = self.getPageViewController() {
+        if let currentPageViewController = self.currentPageViewController {
             currentPageViewController.shiftPageRight()
         }
     }
     
     @objc func pageForward(_ sender: Any) {
-        if let currentPageViewController = self.getPageViewController() {
+        if let currentPageViewController = self.currentPageViewController {
             currentPageViewController.pageForward()
         }
     }
+    
+    @objc func toggleToSingle(_ sender: Any) {
+        pageType = .single
+        updatePageView()
+        #if targetEnvironment(macCatalyst)
+        selectStyleToolbar?.setSelected(false, at: 0)
+        selectStyleToolbar?.setSelected(true, at: 1)
+        #endif
+    }
+    
+    @objc func toggleToSpread(_ sender: Any) {
+        pageType = .spread
+        updatePageView()
+        #if targetEnvironment(macCatalyst)
+        selectStyleToolbar?.setSelected(true, at: 0)
+        selectStyleToolbar?.setSelected(false, at: 1)
+        #endif
+    }
+    
+    @objc func toggleToRight(_ sender: Any) {
+        pageDirection = .right
+        updatePageView()
+        #if targetEnvironment(macCatalyst)
+        selectDirectionToolbar?.setSelected(false, at: 0)
+        selectDirectionToolbar?.setSelected(true, at: 1)
+        #endif
+        if let vc = currentThumbnailViewController {
+            vc.pageDirection = .right
+        }
+    }
+    
+    @objc func toggleToLeft(_ sender: Any) {
+        pageDirection = .left
+        updatePageView()
+        #if targetEnvironment(macCatalyst)
+        selectDirectionToolbar?.setSelected(true, at: 0)
+        selectDirectionToolbar?.setSelected(false, at: 1)
+        #endif
+        if let vc = currentThumbnailViewController {
+            vc.pageDirection = .left
+        }
+    }
+
+    @objc func open(_ sender: Any) {
+        openPicker()
+    }
+
+    @objc func openAsANewWindow(_ sender: Any) {
+        let userActivity = NSUserActivity(
+          activityType: "com.sonson.multiwindow"
+        )
+        UIApplication.shared.requestSceneSessionActivation(nil, userActivity: userActivity, options: nil, errorHandler: nil)
+    }
+    
+    @objc func togglePageTypeOnToolbar(_ sender: Any) {
+        let selectedIndex: Int? = {
+            #if targetEnvironment(macCatalyst)
+            if let obj = sender as? NSToolbarItemGroup {
+                return obj.selectedIndex
+            }
+            #else
+            if let obj = sender as? UISegmentedControl {
+                return obj.selectedSegmentIndex
+            }
+            #endif
+            return nil
+        }();
+        
+        if let selectedIndex = selectedIndex {
+            
+            if selectedIndex == 0 {
+                pageType = .spread
+            } else if selectedIndex == 1 {
+                pageType = .single
+            }
+            updatePageView()
+        }
+    }
+    
+    @objc func togglePageDirectionOnToolbar(_ sender: Any) {
+        
+        let selectedIndex: Int? = {
+            #if targetEnvironment(macCatalyst)
+            if let obj = sender as? NSToolbarItemGroup {
+                return obj.selectedIndex
+            }
+            #else
+            if let obj = sender as? UISegmentedControl {
+                return obj.selectedSegmentIndex
+            }
+            #endif
+            return nil
+        }();
+        
+        if let selectedIndex = selectedIndex {
+            if selectedIndex == 0 {
+                pageDirection = .left
+            } else if selectedIndex == 1 {
+                pageDirection = .right
+            }
+            updatePageView()
+
+            if let vc = currentThumbnailViewController {
+                vc.pageDirection = pageDirection
+            }
+        }
+    }
+
 }

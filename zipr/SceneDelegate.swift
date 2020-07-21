@@ -26,7 +26,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         return Array(squences_windows).compactMap { (window) -> BaseViewController? in
             if let vc = window.rootViewController as? BaseViewController {
-                if vc.picker != nil && !vc.isOpenedAnyFile() {
+                if vc.documentPickerViewController != nil && !vc.isOpenedAnyFile {
                     return vc
                 }
             }
@@ -38,6 +38,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         os_log("[zipr] scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>)", log: scribe, type: .default)
         
         guard let url = URLContexts.first?.url else {
+            os_log("[zipr] URL not found.")
             return
         }
         os_log("[zipr] url= %@", log: scribe, type: .default, url.absoluteString)
@@ -45,10 +46,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         do {
             #if targetEnvironment(macCatalyst)
                 if let vc = getDisplayingBaseViewControllers().first {
+                    os_log("[zipr] Found existing base view controller.")
                     vc.open(url: url)
                 } else {
                     let act = NSUserActivity(activityType: "a")
                     act.userInfo = ["url": url.absoluteString]
+                    os_log("[zipr] Try to open new window", url.absoluteString)
                     UIApplication.shared.requestSceneSessionActivation(nil, userActivity: act, options: nil, errorHandler: nil)
                 }
             #else
