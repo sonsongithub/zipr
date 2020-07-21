@@ -12,6 +12,7 @@ import UIKit
 class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
     let archiver: Archiver!
+    let startPage: Int
     let collectionView: UICollectionView!
     var pageDirection :PageDirection {
         didSet {
@@ -23,13 +24,15 @@ class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICol
         self.pageDirection = .left
         self.archiver = nil
         self.collectionView = nil
+        self.startPage = 0
         super.init(coder: coder)
         fatalError("Can not create this view controller with NSCoder")
     }
     
-    init(archiver: Archiver, pageDirection: PageDirection) {
+    init(archiver: Archiver, pageDirection: PageDirection, startAt page: Int) {
         self.pageDirection = pageDirection
         self.archiver = archiver
+        self.startPage = page
         self.collectionView = {
             //セルのレイアウト設計
             let layout: UICollectionViewFlowLayout = ThumbnailViewFlowLayout(pageDirection: pageDirection)
@@ -75,14 +78,13 @@ class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICol
         collectionView.delegate = self
     }
     
-    private func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
-
-        return CGSize(width: 100, height: 200)
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        collectionView.scrollToItem(at: IndexPath(item: self.startPage, section: 0), at: .centeredHorizontally, animated: false)
     }
     
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        
+    private func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
+        return CGSize(width: 100, height: 200)
     }
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
