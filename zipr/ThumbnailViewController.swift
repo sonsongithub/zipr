@@ -113,7 +113,9 @@ class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICol
         self.collectionView.visibleCells.forEach { (cell) in
             if let cell = cell as? ThumbnailViewCell {
                 if cell.imageView.image == nil {
-                    _ = archiver.read(at: cell.page)
+                    if let image = archiver.read(at: cell.page) {
+                        cell.imageView.image = image
+                    }
                 }
             }
         }
@@ -124,7 +126,9 @@ class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICol
         self.collectionView.visibleCells.forEach { (cell) in
             if let cell = cell as? ThumbnailViewCell {
                 if cell.imageView.image == nil {
-                    _ = archiver.read(at: cell.page)
+                    if let image = archiver.read(at: cell.page) {
+                        cell.imageView.image = image
+                    }
                 }
             }
         }
@@ -134,23 +138,15 @@ class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICol
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ThumbnailViewCell", for: indexPath) as! ThumbnailViewCell
         cell.textLabel.text = String(indexPath.row + 1)
-        
-        if collectionView.isDragging {
-            if let image = archiver.readFromCache(at: indexPath.item) {
-                cell.imageView.image = image
-                cell.page = indexPath.item
-                cell.identifier = archiver.identifier
-                cell.activityIndicatorView.stopAnimating()
-            } else {
-                cell.page = indexPath.item
-                cell.identifier = archiver.identifier
-            }
+    
+        if let image = archiver.read(at: indexPath.item, startLoading: !collectionView.isDragging) {
+            cell.imageView.image = image
+            cell.page = indexPath.item
+            cell.identifier = archiver.identifier
+            cell.activityIndicatorView.stopAnimating()
         } else {
-            if cell.imageView.image == nil {
-                cell.page = indexPath.item
-                cell.identifier = archiver.identifier
-                _ = archiver.read(at: cell.page)
-            }
+            cell.page = indexPath.item
+            cell.identifier = archiver.identifier
         }
         return cell
     }

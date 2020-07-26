@@ -251,21 +251,21 @@ class Archiver {
         throw NSError(domain: "", code: 0, userInfo: nil)
     }
     
-    func readFromCache(at index: Int) -> UIImage? {
-        let entry = entries[index]
-        do {
-            let cacheURL = try self.getCachePath(string: entry.path)
-//            print(cacheURL)
-            let data = try Data(contentsOf: cacheURL)
-            if let image = UIImage(data: data) {
-                return image
-            }
-            throw NSError(domain: "com.sonson.image", code: 0, userInfo: nil)
-        } catch {
-//            print(error)
-            return nil
-        }
-    }
+//    func readFromCache(at index: Int) -> UIImage? {
+//        let entry = entries[index]
+//        do {
+//            let cacheURL = try self.getCachePath(string: entry.path)
+////            print(cacheURL)
+//            let data = try Data(contentsOf: cacheURL)
+//            if let image = UIImage(data: data) {
+//                return image
+//            }
+//            throw NSError(domain: "com.sonson.image", code: 0, userInfo: nil)
+//        } catch {
+////            print(error)
+//            return nil
+//        }
+//    }
     
     func pop() -> Void {
         
@@ -326,6 +326,7 @@ class Archiver {
                     
                     NotificationCenter.default.post(name: Notification.Name("Loaded"), object: nil, userInfo: userInfo)
                 } else {
+                    print("can not read image")
                     let userInfo: [String: Any] = [
                         "page": tempCurrentTask.page,
                         "identifier": self.identifier
@@ -350,12 +351,23 @@ class Archiver {
         }
     }
     
-    func read(at index: Int) -> Bool {
-        // ill index for entries
-        guard index >= 0 && index < entries.count else {
-            return false
+    func cache(at index: Int) -> UIImage? {
+        let entry = entries[index]
+        do {
+            let cacheURL = try self.getCachePath(string: entry.path)
+//            print(cacheURL)
+            let data = try Data(contentsOf: cacheURL)
+            if let image = UIImage(data: data) {
+                return image
+            }
+            throw NSError(domain: "com.sonson.image", code: 0, userInfo: nil)
+        } catch {
+//            print(error)
+            return nil
         }
-        
+    }
+    
+    func push(at index: Int) {
         var flag = false
         
         self.semaphore.wait()
@@ -366,18 +378,62 @@ class Archiver {
             }
         }
         
-        self.semaphore.signal()
-        
-        if flag {
-            return false
+        if !flag {
+            let entry = entries[index]
+            let task = ArchiverTask(entry, page: index)
+            taskQueue.append(task)
         }
         
-        let entry = entries[index]
-        let task = ArchiverTask(entry, page: index)
-        taskQueue.append(task)
+        self.semaphore.signal()
         
         pop()
-        
-        return true
     }
+    
+    func read(at index: Int, startLoading: Bool = true) -> UIImage? {
+        // ill index for entries
+        guard index >= 0 && index < entries.count else {
+            return nil
+        }
+        
+        if let image = cache(at: index) {
+            return image
+        }
+        
+        if startLoading {
+            push(at: index)
+        }
+        
+        return nil
+    }
+//    
+//    func read_old(at index: Int) -> Bool {
+//        // ill index for entries
+//        guard index >= 0 && index < entries.count else {
+//            return false
+//        }
+//        
+//        var flag = false
+//        
+//        self.semaphore.wait()
+//        
+//        taskQueue.forEach { (task) in
+//            if task.page == index {
+//                flag = true
+//            }
+//        }
+//        
+//        self.semaphore.signal()
+//        
+//        if flag {
+//            return false
+//        }
+//        
+//        let entry = entries[index]
+//        let task = ArchiverTask(entry, page: index)
+//        taskQueue.append(task)
+//        
+//        pop()
+//        
+//        return true
+//    }
 }

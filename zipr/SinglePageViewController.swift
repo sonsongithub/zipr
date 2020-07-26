@@ -25,11 +25,12 @@ class SinglePageViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         if let archiver = archiver {
-            if archiver.read(at: page) {
-                activityIndicatorView.startAnimating()
+            
+            if let image = archiver.read(at: page) {
+                imageView.image = image
+                activityIndicatorView.stopAnimating()
             } else {
-                // error
-                // no page
+                activityIndicatorView.startAnimating()
             }
         }
     }
