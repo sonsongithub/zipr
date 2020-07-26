@@ -109,7 +109,6 @@ class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICol
     }
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        print("scrollViewDidEndDecelerating")
         self.collectionView.visibleCells.forEach { (cell) in
             if let cell = cell as? ThumbnailViewCell {
                 if cell.imageView.image == nil {
@@ -122,7 +121,6 @@ class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICol
     }
     
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        print("scrollViewDidEndDragging")
         self.collectionView.visibleCells.forEach { (cell) in
             if let cell = cell as? ThumbnailViewCell {
                 if cell.imageView.image == nil {

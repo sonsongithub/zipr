@@ -12,6 +12,9 @@ import ZIPFoundation
 import os
 
 class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
+    
+    static let blackoutAlpha: CGFloat = 0.1
+    
     let activityIndicatorView: UIActivityIndicatorView = UIActivityIndicatorView(style: .large)
     
     var pageType: PageType = .spread
@@ -146,12 +149,17 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
         self.activityIndicatorView.isHidden = false
         self.activityIndicatorView.startAnimating()
         self.view.bringSubviewToFront(self.activityIndicatorView)
-
+        
         DispatchQueue.main.async {
             self.documentPickerViewController = UIDocumentPickerViewController.init(documentTypes: ["public.zip-archive"], in: .import)
             self.documentPickerViewController?.delegate = self
             if let picker = self.documentPickerViewController {
                 self.present(picker, animated: true, completion: nil)
+                if let vc = self.currentPageViewController {
+                    UIView.animate(withDuration: 0.3) {
+                        vc.view.alpha = BaseViewController.blackoutAlpha
+                    }
+                }
             }
         }
     }
@@ -462,6 +470,12 @@ extension BaseViewController: UIDocumentPickerDelegate {
             self.activityIndicatorView.isHidden = true
         }
         
+        if let vc = currentPageViewController {
+            UIView.animate(withDuration: 0.3) {
+                vc.view.alpha = 1.0
+            }
+        }
+        
         #if targetEnvironment(macCatalyst)
         
         if let vc = children.first as? PageViewController {
@@ -496,11 +510,18 @@ extension BaseViewController: UIDocumentPickerDelegate {
             self.toolView = nil
         }
         
-        if let url = urls.first {
-            open(url: url)
-        } else {
-            self.activityIndicatorView.stopAnimating()
-            self.activityIndicatorView.isHidden = true
+        DispatchQueue.main.async {
+            if let url = urls.first {
+                self.open(url: url)
+            } else {
+                if let vc = self.currentPageViewController {
+                    UIView.animate(withDuration: 0.3) {
+                        vc.view.alpha = 1.0
+                    }
+                }
+                self.activityIndicatorView.stopAnimating()
+                self.activityIndicatorView.isHidden = true
+            }
         }
     }
 }
