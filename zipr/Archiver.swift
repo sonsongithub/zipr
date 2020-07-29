@@ -193,6 +193,36 @@ class Archiver {
     var taskQueue: [ArchiverTask] = Array([])
     var currentTask: ArchiverTask? = nil
     
+    static func deleteOldCacheFiles() {
+        
+        let urls = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
+        
+        if let url = urls.first {
+            do {
+                let paths = try FileManager.default.contentsOfDirectory(atPath: url.path)
+                
+                let refNow = Date.timeIntervalSinceReferenceDate
+                
+                paths.forEach { (path) in
+                    do {
+                        let url = url.appendingPathComponent(path)
+                        let attr = try FileManager.default.attributesOfItem(atPath: url.path)
+                        if let modificationDate = attr[FileAttributeKey.modificationDate] as? Date {
+                            print(modificationDate)
+                            if refNow - modificationDate.timeIntervalSinceReferenceDate > 2400 * 24 {
+                                try FileManager.default.removeItem(at: url)
+                            }
+                        }
+                    } catch {
+                        print(error)
+                    }
+                }
+            } catch {
+                print(error)
+            }
+        }
+    }
+    
     init(data fileData: Data) throws {
         self.identifier = fileData.digest(type: .sha256)
         self.queue = DispatchQueue(label: self.identifier)
@@ -244,28 +274,19 @@ class Archiver {
         
         if let url = urls.first {
             let directoryURL = url.appendingPathComponent(self.identifier)
-            try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true, attributes: nil)
+            
+            var isDirectory: ObjCBool = false
+            if FileManager.default.fileExists(atPath: directoryURL.path, isDirectory: &isDirectory) {
+                let attr: [FileAttributeKey: Any] = [FileAttributeKey.modificationDate: Date()]
+                try FileManager.default.setAttributes(attr, ofItemAtPath: directoryURL.path)
+            } else {
+                try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true, attributes: nil)
+            }
             let cacheURL = url.appendingPathComponent(self.identifier).appendingPathComponent(string.digest(type: .sha256))
             return cacheURL
         }
         throw NSError(domain: "", code: 0, userInfo: nil)
     }
-    
-//    func readFromCache(at index: Int) -> UIImage? {
-//        let entry = entries[index]
-//        do {
-//            let cacheURL = try self.getCachePath(string: entry.path)
-////            print(cacheURL)
-//            let data = try Data(contentsOf: cacheURL)
-//            if let image = UIImage(data: data) {
-//                return image
-//            }
-//            throw NSError(domain: "com.sonson.image", code: 0, userInfo: nil)
-//        } catch {
-////            print(error)
-//            return nil
-//        }
-//    }
     
     func pop() -> Void {
         
@@ -355,14 +376,12 @@ class Archiver {
         let entry = entries[index]
         do {
             let cacheURL = try self.getCachePath(string: entry.path)
-//            print(cacheURL)
             let data = try Data(contentsOf: cacheURL)
             if let image = UIImage(data: data) {
                 return image
             }
             throw NSError(domain: "com.sonson.image", code: 0, userInfo: nil)
         } catch {
-//            print(error)
             return nil
         }
     }
@@ -405,35 +424,4 @@ class Archiver {
         
         return nil
     }
-//    
-//    func read_old(at index: Int) -> Bool {
-//        // ill index for entries
-//        guard index >= 0 && index < entries.count else {
-//            return false
-//        }
-//        
-//        var flag = false
-//        
-//        self.semaphore.wait()
-//        
-//        taskQueue.forEach { (task) in
-//            if task.page == index {
-//                flag = true
-//            }
-//        }
-//        
-//        self.semaphore.signal()
-//        
-//        if flag {
-//            return false
-//        }
-//        
-//        let entry = entries[index]
-//        let task = ArchiverTask(entry, page: index)
-//        taskQueue.append(task)
-//        
-//        pop()
-//        
-//        return true
-//    }
 }
