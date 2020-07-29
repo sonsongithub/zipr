@@ -3,7 +3,8 @@ Reader for a zip file including only image files. Support iOS, iPad OS, Mac Cata
 
 # Acknowledgement
 
-This software uses [ZIPFoundation](https://github.com/weichsel/ZIPFoundation)(MIT License).
+* This software uses [ZIPFoundation](https://github.com/weichsel/ZIPFoundation)(MIT License).
+* Icon is designed by [@saburicom](https://twitter.com/saburicom). He reserved all copyright of the icon images.
 
 # License
 
