@@ -182,7 +182,6 @@ class Archiver {
     let archive: Archive
     let entries: [Entry]
     let queue: DispatchQueue
-    let semaphore = DispatchSemaphore(value: 1)
     let identifier: String
     
     var reading = false
@@ -252,21 +251,19 @@ class Archiver {
     }
     
     func cancelAll() {
-        self.semaphore.wait()
-        for e in taskQueue {
-            e.progress.cancel()
+        queue.async {
+            for e in self.taskQueue {
+                e.progress.cancel()
+            }
         }
-        self.semaphore.signal()
     }
     
     func cancel(_ page: Int) {
-        self.semaphore.wait()
-
-        self.taskQueue = self.taskQueue.filter({ (task) -> Bool in
-            return (page != task.page)
-        })
-
-        self.semaphore.signal()
+        queue.async {
+            self.taskQueue = self.taskQueue.filter({ (task) -> Bool in
+                return (page != task.page)
+            })
+        }
     }
     
     func getCachePath(string: String) throws -> URL {
@@ -289,21 +286,18 @@ class Archiver {
     }
     
     func pop() -> Void {
-        
-        self.semaphore.wait()
-        if currentTask != nil {
-            self.semaphore.signal()
-            return
-        }
-        guard let tempCurrentTask = taskQueue.popLast() else {
-            self.semaphore.signal()
-            return
-        }
-        currentTask = tempCurrentTask
-        self.semaphore.signal()
-
         queue.async {
+            if self.currentTask != nil {
+                return
+            }
+            guard let tempCurrentTask = self.taskQueue.popLast() else {
+                return
+            }
+            self.currentTask = tempCurrentTask
+            
             do {
+
+                
                 #if DEBUG
                 if self.concurrentTestFlag {
                     let timeInterval = Double.random(in: 0..<0.6)
@@ -354,6 +348,7 @@ class Archiver {
                     ]
                     NotificationCenter.default.post(name: Notification.Name("LoadedFailed"), object: nil, userInfo: userInfo)
                 }
+                self.currentTask = nil
                 
             } catch {
                 let userInfo: [String: Any] = [
@@ -363,11 +358,6 @@ class Archiver {
                 ]
                 NotificationCenter.default.post(name: Notification.Name("LoadedFailed"), object: nil, userInfo: userInfo)
             }
-            
-            self.semaphore.wait()
-            self.currentTask = nil
-            self.semaphore.signal()
-                
             self.pop()
         }
     }
@@ -387,25 +377,17 @@ class Archiver {
     }
     
     func push(at index: Int) {
-        var flag = false
-        
-        self.semaphore.wait()
-        
-        taskQueue.forEach { (task) in
-            if task.page == index {
-                flag = true
+        queue.async {
+            if let _ = self.taskQueue.firstIndex(where: { (task) -> Bool in
+                return (task.page == index)
+            }) {
+            } else {
+                let entry = self.entries[index]
+                let task = ArchiverTask(entry, page: index)
+                self.taskQueue.append(task)
             }
+            self.pop()
         }
-        
-        if !flag {
-            let entry = entries[index]
-            let task = ArchiverTask(entry, page: index)
-            taskQueue.append(task)
-        }
-        
-        self.semaphore.signal()
-        
-        pop()
     }
     
     func read(at index: Int, startLoading: Bool = true) -> UIImage? {
