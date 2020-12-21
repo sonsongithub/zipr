@@ -42,12 +42,31 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             return
         }
         os_log("[zipr] url= %@", log: scribe, type: .default, url.absoluteString)
-         
+        
         do {
             #if targetEnvironment(macCatalyst)
-                if let vc = getDisplayingBaseViewControllers().first {
+                if let _ = getDisplayingBaseViewControllers().first {
                     os_log("[zipr] Found existing base view controller.")
+                    os_log("[zipr] url= %@", log: scribe, type: .default, url.absoluteString)
+                    
+                    guard let windowScene = (scene as? UIWindowScene) else { return }
+                    let window = UIWindow(windowScene: windowScene)
+                    self.window = window
+
+                    let vc = BaseViewController(nibName: nil, bundle: nil)
+                    self.window?.rootViewController = vc
+                    vc.needsOpenFilePicker = false
                     vc.open(url: url)
+                    
+                    #if targetEnvironment(macCatalyst)
+                    if let titlebar = windowScene.titlebar {
+                        titlebar.titleVisibility = .hidden
+                        titlebar.toolbar = nil
+                    }
+                    #endif
+                    
+                    self.window?.makeKeyAndVisible()
+                    
                 } else {
                     let act = NSUserActivity(activityType: "a")
                     act.userInfo = ["url": url.absoluteString]
@@ -61,7 +80,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 let data = try Data.init(contentsOf: url)
 
                 url.stopAccessingSecurityScopedResource()
-            
+
                 let act = NSUserActivity(activityType: "a")
                 act.userInfo = ["data": data]
                 UIApplication.shared.requestSceneSessionActivation(nil, userActivity: act, options: nil, errorHandler: nil)
@@ -108,6 +127,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
+        os_log("[zipr] sceneDidDisconnect")
         // Called as the scene is being released by the system.
         // This occurs shortly after the scene enters the background, or when its session is discarded.
         // Release any resources associated with this scene that can be re-created the next time the scene connects.
@@ -115,21 +135,25 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) {
+        os_log("[zipr] sceneDidBecomeActive")
         // Called when the scene has moved from an inactive state to an active state.
         // Use this method to restart any tasks that were paused (or not yet started) when the scene was inactive.
     }
 
     func sceneWillResignActive(_ scene: UIScene) {
+        os_log("[zipr] sceneWillResignActive")
         // Called when the scene will move from an active state to an inactive state.
         // This may occur due to temporary interruptions (ex. an incoming phone call).
     }
 
     func sceneWillEnterForeground(_ scene: UIScene) {
+        os_log("[zipr] sceneWillEnterForeground")
         // Called as the scene transitions from the background to the foreground.
         // Use this method to undo the changes made on entering the background.
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
+        os_log("[zipr] sceneDidEnterBackground")
         // Called as the scene transitions from the foreground to the background.
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.

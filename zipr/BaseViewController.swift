@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 import ZIPFoundation
 import os
+import UniformTypeIdentifiers
 
 class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
     
@@ -104,10 +105,13 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
     }
     
     func open(url: URL) {
-        
         func open_(url: URL) {
-            DispatchQueue.main.async {
-                do {
+            do {
+                var isDirectory: ObjCBool = false
+                FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
+                if isDirectory.boolValue {
+                    print(url.absoluteString)
+                } else {
                     let archiver = try Archiver(url: url)
                     if let currentPageViewController = self.currentPageViewController {
                         currentPageViewController.view.removeFromSuperview()
@@ -118,14 +122,13 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
                     vc.view.frame = self.view.bounds
                     self.view.addSubview(vc.view)
                     vc.didMove(toParent: self)
-                    
-                } catch {
-                    print(error)
                 }
-                DispatchQueue.main.async {
-                    self.activityIndicatorView.stopAnimating()
-                    self.activityIndicatorView.isHidden = true
-                }
+            } catch {
+                print(error)
+            }
+            DispatchQueue.main.async {
+                self.activityIndicatorView.stopAnimating()
+                self.activityIndicatorView.isHidden = true
             }
         }
         
@@ -136,8 +139,8 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
         
         if let picker = documentPickerViewController {
             picker.dismiss(animated: true) {
-                open_(url: url)
                 self.documentPickerViewController = nil
+                open_(url: url)
             }
         } else {
             open_(url: url)
@@ -151,7 +154,7 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
         self.view.bringSubviewToFront(self.activityIndicatorView)
         
         DispatchQueue.main.async {
-            self.documentPickerViewController = UIDocumentPickerViewController.init(documentTypes: ["public.zip-archive"], in: .import)
+            self.documentPickerViewController = UIDocumentPickerViewController(forOpeningContentTypes: [UTType.zip], asCopy: true)
             self.documentPickerViewController?.delegate = self
             if let picker = self.documentPickerViewController {
                 self.present(picker, animated: true, completion: nil)
@@ -429,7 +432,11 @@ extension BaseViewController {
     }
     
     @objc func tapped(_ sender: UITapGestureRecognizer){
+        os_log("[zipr] tapped", log: scribe, type: .error)
+        
         if sender.state == .ended {
+            
+            
             let tap = sender.location(in: self.view)
             
             let tapAreaWidthRatio = CGFloat(0.2)
@@ -678,7 +685,7 @@ extension BaseViewController: NSToolbarDelegate {
 extension BaseViewController: UIDropInteractionDelegate {
     func dropInteraction(_ interaction: UIDropInteraction, canHandle session: UIDropSession) -> Bool {
         let candidates = session.items.filter { (item) -> Bool in
-            return item.itemProvider.hasItemConformingToTypeIdentifier("public.zip-archive")
+            return item.itemProvider.hasItemConformingToTypeIdentifier("public.zip-archive") || item.itemProvider.hasItemConformingToTypeIdentifier("public.folder")
         }
         return (candidates.count > 0)
     }
@@ -688,6 +695,16 @@ extension BaseViewController: UIDropInteractionDelegate {
     }
 
     func dropInteraction(_ interaction: UIDropInteraction, performDrop session: UIDropSession) {
+        session.items.forEach { (item) in
+            print(item.itemProvider.registeredTypeIdentifiers)
+            
+            if item.itemProvider.canLoadObject(ofClass: URL.self) {
+                print("-------canLoadObject------------")
+            }
+            if item.itemProvider.canLoadObject(ofClass: String.self) {
+                print("-------canLoadObject------------")
+            }
+        }
         if session.hasItemsConforming(toTypeIdentifiers: ["public.zip-archive"]) {
             session.items.forEach { (item) in
                 item.itemProvider.loadDataRepresentation(forTypeIdentifier: "public.zip-archive") { (data, error) in
@@ -697,6 +714,30 @@ extension BaseViewController: UIDropInteractionDelegate {
                         }
                     }
                 }
+            }
+        } else if session.hasItemsConforming(toTypeIdentifiers: ["public.folder"]) {
+            session.items.forEach { (item) in
+                print("-------------------")
+                item.itemProvider.loadInPlaceFileRepresentation(forTypeIdentifier: "public.folder") { (url, success, error) in
+                    if let url = url {
+                        print(url)
+                    }
+                }
+//                if item.itemProvider.canLoadObject(ofClass: NSURL.self) {
+//                    print("-------canLoadObject------------")
+//                }
+//                item.itemProvider.loadDataRepresentation(forTypeIdentifier: "public.folder") { (data, error) in
+//                    if let data = data {
+//                        print(data)
+//                        if let str = String(data: data, encoding: .utf8) {
+//                            print(str)
+//                        }
+//                    }
+//                }
+//                print(item.itemProvider.suggestedName)
+//                item.itemProvider.registeredTypeIdentifiers.forEach { (str) in
+//                    print(str)
+//                }
             }
         }
     }

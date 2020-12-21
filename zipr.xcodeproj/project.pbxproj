@@ -10,6 +10,7 @@
 		14185FF324C6DE5E00FDE20E /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 14185FF224C6DE5E00FDE20E /* Settings.bundle */; };
 		142CD27E248F0A9E00347645 /* ControllerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142CD27D248F0A9E00347645 /* ControllerView.swift */; };
 		143371A32479618600EF650B /* Hash.swift in Sources */ = {isa = PBXBuildFile; fileRef = 143371A22479618600EF650B /* Hash.swift */; };
+		1462DE3E257B6B2E000E39AB /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 1462DE3D257B6B2E000E39AB /* ZIPFoundation */; };
 		14783344246E7C680087C3EE /* PageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14783343246E7C680087C3EE /* PageViewController.swift */; };
 		14783346246FA5980087C3EE /* SinglePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14783345246FA5980087C3EE /* SinglePageViewController.swift */; };
 		14783348246FEF300087C3EE /* SpreadPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14783347246FEF300087C3EE /* SpreadPageViewController.swift */; };
@@ -21,7 +22,6 @@
 		14B5B2302466CA9000E5E9A2 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 14B5B22E2466CA9000E5E9A2 /* LaunchScreen.storyboard */; };
 		14B5B23A2466CAAC00E5E9A2 /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14B5B2392466CAAC00E5E9A2 /* CloudKit.framework */; };
 		14F0E6F7248A04A100C2A192 /* ThumbnailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14F0E6F6248A04A100C2A192 /* ThumbnailViewController.swift */; };
-		14F224902466F41B00630C87 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 14F2248F2466F41B00630C87 /* ZIPFoundation */; };
 		14F224922466F60C00630C87 /* Archiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14F224912466F60C00630C87 /* Archiver.swift */; };
 		14F2249A24684BD000630C87 /* BaseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14F2249924684BD000630C87 /* BaseViewController.swift */; };
 /* End PBXBuildFile section */
@@ -54,7 +54,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				14B5B23A2466CAAC00E5E9A2 /* CloudKit.framework in Frameworks */,
-				14F224902466F41B00630C87 /* ZIPFoundation in Frameworks */,
+				1462DE3E257B6B2E000E39AB /* ZIPFoundation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -127,7 +127,7 @@
 			);
 			name = zipr;
 			packageProductDependencies = (
-				14F2248F2466F41B00630C87 /* ZIPFoundation */,
+				1462DE3D257B6B2E000E39AB /* ZIPFoundation */,
 			);
 			productName = zipr;
 			productReference = 14B5B2202466CA8F00E5E9A2 /* zipr.app */;
@@ -140,7 +140,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1140;
-				LastUpgradeCheck = 1140;
+				LastUpgradeCheck = 1210;
 				ORGANIZATIONNAME = sonson;
 				TargetAttributes = {
 					14B5B21F2466CA8F00E5E9A2 = {
@@ -158,7 +158,7 @@
 			);
 			mainGroup = 14B5B2172466CA8F00E5E9A2;
 			packageReferences = (
-				14F2248E2466F41B00630C87 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
+				1462DE3C257B6B2E000E39AB /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 			);
 			productRefGroup = 14B5B2212466CA8F00E5E9A2 /* Products */;
 			projectDirPath = "";
@@ -242,6 +242,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -303,6 +304,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -341,6 +343,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = JP866VWWSD;
 				INFOPLIST_FILE = zipr/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -366,6 +369,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = JP866VWWSD;
 				INFOPLIST_FILE = zipr/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -404,7 +408,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		14F2248E2466F41B00630C87 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
+		1462DE3C257B6B2E000E39AB /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/weichsel/ZIPFoundation";
 			requirement = {
@@ -415,9 +419,9 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		14F2248F2466F41B00630C87 /* ZIPFoundation */ = {
+		1462DE3D257B6B2E000E39AB /* ZIPFoundation */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 14F2248E2466F41B00630C87 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			package = 1462DE3C257B6B2E000E39AB /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
 			productName = ZIPFoundation;
 		};
 /* End XCSwiftPackageProductDependency section */
