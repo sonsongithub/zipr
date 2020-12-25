@@ -94,6 +94,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         os_log("[zipr] scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions)", log: scribe, type: .error)
         
         guard let windowScene = (scene as? UIWindowScene) else { return }
+        
+        if let a = session.stateRestorationActivity {
+            print(a.userInfo)
+        }
+        
+        connectionOptions.userActivities.forEach { (activity) in
+            print(activity.userInfo)
+            print(activity.activityType)
+            print(activity.title)
+        }
                 
         let window = UIWindow(windowScene: windowScene)
         self.window = window

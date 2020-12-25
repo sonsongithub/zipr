@@ -11,12 +11,23 @@ import UIKit
 
 class ControllerView: UIView {
     
+    var topAnchorConstraint: NSLayoutConstraint?
+    var heightConstraint: NSLayoutConstraint?
+    
     let openButton = UIButton(type: .roundedRect)
     let leftButton = UIButton(type: .roundedRect)
     let rightButton = UIButton(type: .roundedRect)
     
     let pageDirectionSwitcher = UISegmentedControl(items: [UIImage(named: "left_direction")!, UIImage(named: "right_direction")!])
     let pageTypeSwitcher = UISegmentedControl(items: [UIImage(named: "single")!, UIImage(named: "book")!])
+    
+    func setTarget(_ target: Any?) {
+        self.pageDirectionSwitcher.addTarget(target, action: #selector(PageViewController.togglePageDirectionOnToolbar(_:)), for: .valueChanged)
+        self.pageTypeSwitcher.addTarget(target, action: #selector(PageViewController.togglePageTypeOnToolbar(_:)), for: .valueChanged)
+//            controllerView.openButton.addTarget(self, action: #selector(PageViewController.open(_:)), for: .touchUpInside)
+        self.leftButton.addTarget(target, action: #selector(PageViewController.pageLeft(_:)), for: .touchUpInside)
+        self.rightButton.addTarget(target, action: #selector(PageViewController.pageRight(_:)), for: .touchUpInside)
+    }
     
     var pageDirection: PageDirection = .left {
         didSet {

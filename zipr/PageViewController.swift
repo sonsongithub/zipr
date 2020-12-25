@@ -51,7 +51,7 @@ class PageViewController: UIPageViewController, UIGestureRecognizerDelegate {
         }
         .first { (scene) -> Bool in
             let candidate = scene.windows.first { (window) -> Bool in
-                return (window.rootViewController == self)
+                return (window.rootViewController == self.parent)
             }
             return (candidate != nil)
         }
@@ -59,13 +59,20 @@ class PageViewController: UIPageViewController, UIGestureRecognizerDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        #if targetEnvironment(macCatalyst)
         if let windowScene = currentScene {
-            let toolbar = NSToolbar(identifier: "testToolbar")
-            toolbar.delegate = self
-            toolbar.allowsUserCustomization = false
-            toolbar.centeredItemIdentifier = NSToolbarItem.Identifier(rawValue: "testGroup")
-            windowScene.titlebar?.toolbar = toolbar
-            windowScene.titlebar?.titleVisibility = .hidden
+            if let toolbar = windowScene.titlebar?.toolbar {
+                toolbar.delegate = self
+                toolbar.visibleItems?.forEach({ (item) in
+                    item.target = self
+                })
+            }
+        }
+        #endif
+        
+        if let v = self.currentToolbar {
+            v.setTarget(self)
         }
         
         let tapGesture:UITapGestureRecognizer = UITapGestureRecognizer(
@@ -140,80 +147,55 @@ class PageViewController: UIPageViewController, UIGestureRecognizerDelegate {
         pageForward()
     }
     
-    @objc func toggleToSingle(_ sender: Any) {
-        if let archiver = self.archiver {
-            let page = self.page
-            
-            let par = self.parent!
-            
+    func update(page: Int, pageDirection: PageDirection, pageType: PageType) {
+        if let parent = self.parent, let archiver = self.archiver {
+        
             self.view.removeFromSuperview()
             self.removeFromParent()
 
-            let vc = PageViewController(archiver: archiver, page: page, pageDirection: pageDirection, pageType: .single)
-            par.addChild(vc)
-            vc.view.frame = par.view.bounds
-            par.view.addSubview(vc.view)
-            vc.didMove(toParent: par)
+            let vc = PageViewController(archiver: archiver, page: page, pageDirection: pageDirection, pageType: pageType)
+            parent.addChild(vc)
+            vc.view.frame = parent.view.bounds
+            parent.view.addSubview(vc.view)
+            vc.didMove(toParent: parent)
             
-            par.view.sendSubviewToBack(vc.view)
+            parent.view.sendSubviewToBack(vc.view)
         }
+    }
+    
+    @objc func toggleToSingle(_ sender: Any) {
+        update(page: self.page, pageDirection: self.pageDirection, pageType: .single)
         
-//        pageType = .single
-//        updatePageView()
-//        #if targetEnvironment(macCatalyst)
-//        selectStyleToolbar?.setSelected(false, at: 0)
-//        selectStyleToolbar?.setSelected(true, at: 1)
-//        #endif
+        #if targetEnvironment(macCatalyst)
+        selectStyleToolbar?.setSelected(false, at: 0)
+        selectStyleToolbar?.setSelected(true, at: 1)
+        #endif
     }
     
     @objc func toggleToSpread(_ sender: Any) {
-        if let archiver = self.archiver {
-            let page = self.page
-            
-            let par = self.parent!
-            
-            self.view.removeFromSuperview()
-            self.removeFromParent()
-
-            let vc = PageViewController(archiver: archiver, page: page, pageDirection: pageDirection, pageType: .spread)
-            par.addChild(vc)
-            vc.view.frame = par.view.bounds
-            par.view.addSubview(vc.view)
-            vc.didMove(toParent: par)
-            
-            par.view.sendSubviewToBack(vc.view)
-        }
         
-//        pageType = .spread
-//        updatePageView()
-//        #if targetEnvironment(macCatalyst)
-//        selectStyleToolbar?.setSelected(true, at: 0)
-//        selectStyleToolbar?.setSelected(false, at: 1)
-//        #endif
+        update(page: self.page, pageDirection: self.pageDirection, pageType: .spread)
+        
+        #if targetEnvironment(macCatalyst)
+        selectStyleToolbar?.setSelected(true, at: 0)
+        selectStyleToolbar?.setSelected(false, at: 1)
+        #endif
     }
     
     @objc func toggleToRight(_ sender: Any) {
-//        pageDirection = .right
-//        updatePageView()
-//        #if targetEnvironment(macCatalyst)
-//        selectDirectionToolbar?.setSelected(false, at: 0)
-//        selectDirectionToolbar?.setSelected(true, at: 1)
-//        #endif
-//        if let vc = currentThumbnailViewController {
-//            vc.pageDirection = .right
-//        }
+        if let vc = currentThumbnailViewController {
+            print(vc)
+            vc.pageDirection = .right
+        }
+        update(page: self.page, pageDirection: .right, pageType: self.pageType)
     }
     
     @objc func toggleToLeft(_ sender: Any) {
-//        pageDirection = .left
-//        updatePageView()
-//        #if targetEnvironment(macCatalyst)
-//        selectDirectionToolbar?.setSelected(true, at: 0)
-//        selectDirectionToolbar?.setSelected(false, at: 1)
-//        #endif
-//        if let vc = currentThumbnailViewController {
-//            vc.pageDirection = .left
-//        }
+        if let vc = currentThumbnailViewController {
+            print(vc)
+            vc.pageDirection = .left
+        }
+        update(page: self.page, pageDirection: .left, pageType: self.pageType)
     }
     
     @objc func togglePageTypeOnToolbar(_ sender: Any) {
@@ -231,13 +213,11 @@ class PageViewController: UIPageViewController, UIGestureRecognizerDelegate {
         }();
         
         if let selectedIndex = selectedIndex {
-//
-//            if selectedIndex == 0 {
-//                pageType = .spread
-//            } else if selectedIndex == 1 {
-//                pageType = .single
-//            }
-//            updatePageView()
+            if selectedIndex == 0 {
+                update(page: self.page, pageDirection: self.pageDirection, pageType: .spread)
+            } else if selectedIndex == 1 {
+                update(page: self.page, pageDirection: self.pageDirection, pageType: .single)
+            }
         }
     }
     
@@ -257,16 +237,18 @@ class PageViewController: UIPageViewController, UIGestureRecognizerDelegate {
         }();
         
         if let selectedIndex = selectedIndex {
-//            if selectedIndex == 0 {
-//                pageDirection = .left
-//            } else if selectedIndex == 1 {
-//                pageDirection = .right
-//            }
-//            updatePageView()
-//
-//            if let vc = currentThumbnailViewController {
-//                vc.pageDirection = pageDirection
-//            }
+            if selectedIndex == 0 {
+                if let vc = currentThumbnailViewController {
+                    print(vc)
+                    vc.pageDirection = .left
+                }
+                update(page: self.page, pageDirection: .left, pageType: self.pageType)
+            } else if selectedIndex == 1 {
+                if let vc = currentThumbnailViewController {
+                    vc.pageDirection = .right
+                }
+                update(page: self.page, pageDirection: .right, pageType: self.pageType)
+            }
         }
     }
     
@@ -474,21 +456,55 @@ class PageViewController: UIPageViewController, UIGestureRecognizerDelegate {
     var constraint: NSLayoutConstraint?
     
     var currentThumbnailViewController: ThumbnailViewController? {
-        return self.children.compactMap { (vc) -> ThumbnailViewController? in
+        guard let parent = self.parent else { return nil }
+        return parent.children.compactMap { (vc) -> ThumbnailViewController? in
             return vc as? ThumbnailViewController
         }.first
     }
     
+    var currentToolbar: ControllerView? {
+        guard let parent = self.parent else { return nil }
+        return parent.view.subviews.compactMap { (vc) -> ControllerView? in
+            return vc as? ControllerView
+        }.first
+    }
+    
+    #if targetEnvironment(macCatalyst)
+    var titleBarHidden: Bool {
+        get {
+            if let windowScene = currentScene {
+                return (windowScene.titlebar?.toolbar == nil)
+            }
+            return false
+        }
+        set {
+            if let windowScene = currentScene {
+                guard newValue != (windowScene.titlebar?.toolbar == nil) else { return }
+                if newValue {
+                    windowScene.titlebar?.toolbar = nil
+                } else {
+                    let toolbar = NSToolbar(identifier: "testToolbar")
+                    toolbar.delegate = self
+                    toolbar.allowsUserCustomization = false
+                    toolbar.centeredItemIdentifier = NSToolbarItem.Identifier(rawValue: "testGroup")
+                    windowScene.titlebar?.toolbar = toolbar
+                    windowScene.titlebar?.titleVisibility = .hidden
+                }
+            }
+        }
+    }
+    #endif
+    
     func toggleThumbnails() {
     
-//        #if targetEnvironment(macCatalyst)
-//        guard !isAnimatingThumbnailView else { return }
-//        titleBarHidden = !titleBarHidden
-//        #else
-//        guard !isAnimatingControllerView && !isAnimatingThumbnailView else { return }
-//        toggleToolbar()
-//        #endif
-//
+        #if targetEnvironment(macCatalyst)
+        guard !isAnimatingThumbnailView else { return }
+        titleBarHidden = !titleBarHidden
+        #else
+        guard !isAnimatingControllerView && !isAnimatingThumbnailView else { return }
+        toggleToolbar()
+        #endif
+
         guard !isAnimatingThumbnailView else { return }
         
         isAnimatingThumbnailView = true
@@ -498,7 +514,7 @@ class PageViewController: UIPageViewController, UIGestureRecognizerDelegate {
                 constraint.constant = 240
             }
             UIView.animate(withDuration: 0.3, animations: {
-                self.view.layoutIfNeeded()
+                self.parent?.view.layoutIfNeeded()
             }) { (flag) in
                 vc.view.removeFromSuperview()
                 vc.removeFromParent()
@@ -506,30 +522,105 @@ class PageViewController: UIPageViewController, UIGestureRecognizerDelegate {
                 self.isAnimatingThumbnailView = false
             }
         } else {
-            let apage = self.page
-
-            let thumbnailViewController = ThumbnailViewController(archiver: self.archiver, pageDirection: pageDirection, startAt: apage)
+            let thumbnailViewController = ThumbnailViewController(archiver: self.archiver, pageDirection: pageDirection, startAt: self.page)
             
             thumbnailViewController.view.translatesAutoresizingMaskIntoConstraints = false
-
-            self.view.addSubview(thumbnailViewController.view)
-            self.addChild(thumbnailViewController)
-            thumbnailViewController.didMove(toParent: self)
             
-            thumbnailViewController.view.heightAnchor.constraint(equalToConstant: 240).isActive = true
-            thumbnailViewController.view.leftAnchor.constraint(equalTo: self.view.leftAnchor).isActive = true
-            thumbnailViewController.view.rightAnchor.constraint(equalTo: self.view.rightAnchor).isActive = true
-            constraint = thumbnailViewController.view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor, constant: 240)
-            constraint?.isActive = true
-
-            
+            if let parent = self.parent {
+                parent.view.addSubview(thumbnailViewController.view)
+                parent.addChild(thumbnailViewController)
+                thumbnailViewController.didMove(toParent: parent)
+                
+                thumbnailViewController.view.heightAnchor.constraint(equalToConstant: 240).isActive = true
+                thumbnailViewController.view.leftAnchor.constraint(equalTo: parent.view.leftAnchor).isActive = true
+                thumbnailViewController.view.rightAnchor.constraint(equalTo: parent.view.rightAnchor).isActive = true
+                constraint = thumbnailViewController.view.bottomAnchor.constraint(equalTo: parent.view.bottomAnchor, constant: 240)
+                constraint?.isActive = true
+                
+                parent.view.layoutIfNeeded()
+                DispatchQueue.main.async {
+                    self.constraint?.constant = 0
+                    UIView.animate(withDuration: 0.3, animations: {
+                        parent.view.layoutIfNeeded()
+                    }) { (flag) in
+                        self.isAnimatingThumbnailView = false
+                    }
+                }
+            }
+        }
+    }
+    
+    
+    // MARK: - Thumbnail & Controller
+    
+    var isAnimatingControllerView = false
+    
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        
+        if let toolView = self.currentToolbar {
+            toolView.heightConstraint?.constant = controllerViewHeight
+            toolView.topAnchorConstraint?.constant = -self.view.safeAreaInsets.top
+        }
+        
+        UIView.animate(withDuration: 0.3, animations: {
             self.view.layoutIfNeeded()
-            DispatchQueue.main.async {
-                self.constraint?.constant = 0
-                UIView.animate(withDuration: 0.3, animations: {
-                    self.view.layoutIfNeeded()
-                }) { (flag) in
-                    self.isAnimatingThumbnailView = false
+        }) { (flag) in
+        }
+    }
+    
+    var controllerViewHeight: CGFloat {
+        if self.traitCollection.horizontalSizeClass == .regular {
+            return ControllerView.regularHeight + self.view.safeAreaInsets.top
+        } else {
+            if self.view.bounds.size.width < self.view.bounds.size.height {
+                return ControllerView.compactHeight + self.view.safeAreaInsets.top
+            } else {
+                return ControllerView.regularHeight + self.view.safeAreaInsets.top
+            }
+        }
+    }
+    
+    func toggleToolbar() {
+        
+        guard !isAnimatingControllerView else { return }
+        
+        self.isAnimatingControllerView = true
+        
+        if let toolView = self.currentToolbar, let parent = self.parent {
+            toolView.topAnchorConstraint?.constant = -self.controllerViewHeight - parent.view.safeAreaInsets.top
+            UIView.animate(withDuration: 0.3, animations: {
+                toolView.superview?.layoutIfNeeded()
+            }) { (flag) in
+                toolView.removeFromSuperview()
+                self.isAnimatingControllerView = false
+            }
+        } else {
+            
+            let controllerView = ControllerView(frame: .zero)
+            
+            controllerView.setTarget(self)
+            
+            controllerView.pageDirection = pageDirection
+            controllerView.pageType = pageType
+            controllerView.translatesAutoresizingMaskIntoConstraints = false
+            controllerView.heightConstraint = controllerView.heightAnchor.constraint(equalToConstant: self.controllerViewHeight)
+            controllerView.heightConstraint?.isActive = true
+            
+            if let parent = self.parent {
+                parent.view.addSubview(controllerView)
+                controllerView.leftAnchor.constraint(equalTo: parent.view.leftAnchor).isActive = true
+                controllerView.rightAnchor.constraint(equalTo: parent.view.rightAnchor).isActive = true
+                controllerView.topAnchorConstraint = controllerView.topAnchor.constraint(equalTo: parent.view.safeAreaLayoutGuide.topAnchor, constant: -self.controllerViewHeight - parent.view.safeAreaInsets.top)
+                controllerView.topAnchorConstraint?.isActive = true
+                
+                parent.view.layoutIfNeeded()
+                DispatchQueue.main.async {
+                    controllerView.topAnchorConstraint?.constant = -self.view.safeAreaInsets.top
+                    UIView.animate(withDuration: 0.3, animations: {
+                        parent.view.layoutIfNeeded()
+                    }) { (flag) in
+                        self.isAnimatingControllerView = false
+                    }
                 }
             }
         }
@@ -697,11 +788,11 @@ extension PageViewController {
                     return false
                 }
             }
-//            if let toolView = self.toolView {
-//                if v.isDescendant(of: toolView) {
-//                    return false
-//                }
-//            }
+            if let toolView = currentToolbar {
+                if v.isDescendant(of: toolView) {
+                    return false
+                }
+            }
         }
         return true
     }
