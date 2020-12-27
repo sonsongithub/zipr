@@ -24,6 +24,25 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
     @objc func open(_ sender: Any) {
 //        openPicker()
     }
+    
+    func openFolder() {
+        self.activityIndicatorView.isHidden = false
+        self.activityIndicatorView.startAnimating()
+        self.view.bringSubviewToFront(self.activityIndicatorView)
+        
+        DispatchQueue.main.async {
+            self.documentPickerViewController = UIDocumentPickerViewController(forOpeningContentTypes: [UTType.folder], asCopy: false)
+            self.documentPickerViewController?.delegate = self
+            if let picker = self.documentPickerViewController {
+                self.present(picker, animated: true, completion: nil)
+                if let vc = self.currentPageViewController {
+                    UIView.animate(withDuration: 0.3) {
+                        vc.view.alpha = BaseViewController.blackoutAlpha
+                    }
+                }
+            }
+        }
+    }
 
     @objc func openAsANewWindow(_ sender: Any) {
         let userActivity = NSUserActivity(activityType: "com.sonson.multiwindow")
@@ -61,6 +80,7 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
     }
 
     var needsOpenFilePicker = true
+    var needsOpenFolderPicker = false
     
     var isOpenedAnyFile: Bool {
         return (currentPageViewController != nil)
@@ -126,6 +146,13 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
                 FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
                 if isDirectory.boolValue {
                     print(url.absoluteString)
+                    
+                    let vc = FolderViewController(url)
+                    self.addChild(vc)
+                    vc.view.frame = self.view.bounds
+                    self.view.addSubview(vc.view)
+                    vc.didMove(toParent: self)
+                    
                 } else {
                     let archiver = try Archiver(url: url)
                     
@@ -219,7 +246,9 @@ extension BaseViewController {
         let dropInteraction = UIDropInteraction(delegate: self)
         view.addInteraction(dropInteraction)
 
-        if self.needsOpenFilePicker {
+        if self.needsOpenFolderPicker {
+            self.openFolder()
+        } else if self.needsOpenFilePicker {
             self.openPicker()
         }
     }

@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		14015D8C2595B7AB003F03DC /* FolderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14015D8B2595B7AB003F03DC /* FolderViewController.swift */; };
+		14015D8F2596114A003F03DC /* FolderViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14015D8E2596114A003F03DC /* FolderViewCell.swift */; };
+		14015D92259611AC003F03DC /* FolderViewFlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14015D91259611AC003F03DC /* FolderViewFlowLayout.swift */; };
+		14015D952596217B003F03DC /* FolderThumbnailLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14015D942596217B003F03DC /* FolderThumbnailLoader.swift */; };
 		14185FF324C6DE5E00FDE20E /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 14185FF224C6DE5E00FDE20E /* Settings.bundle */; };
 		142CD27E248F0A9E00347645 /* ControllerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142CD27D248F0A9E00347645 /* ControllerView.swift */; };
 		143371A32479618600EF650B /* Hash.swift in Sources */ = {isa = PBXBuildFile; fileRef = 143371A22479618600EF650B /* Hash.swift */; };
@@ -27,6 +31,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		14015D8B2595B7AB003F03DC /* FolderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderViewController.swift; sourceTree = "<group>"; };
+		14015D8E2596114A003F03DC /* FolderViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderViewCell.swift; sourceTree = "<group>"; };
+		14015D91259611AC003F03DC /* FolderViewFlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderViewFlowLayout.swift; sourceTree = "<group>"; };
+		14015D942596217B003F03DC /* FolderThumbnailLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderThumbnailLoader.swift; sourceTree = "<group>"; };
 		14185FF224C6DE5E00FDE20E /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
 		142CD27D248F0A9E00347645 /* ControllerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerView.swift; sourceTree = "<group>"; };
 		143371A22479618600EF650B /* Hash.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hash.swift; sourceTree = "<group>"; };
@@ -91,6 +99,10 @@
 				14F0E6F6248A04A100C2A192 /* ThumbnailViewController.swift */,
 				14A3B2FA249D929F0065D5DE /* ThumbnailViewFlowLayout.swift */,
 				14A3B2F8249D925C0065D5DE /* ThumbnailViewCell.swift */,
+				14015D8B2595B7AB003F03DC /* FolderViewController.swift */,
+				14015D942596217B003F03DC /* FolderThumbnailLoader.swift */,
+				14015D8E2596114A003F03DC /* FolderViewCell.swift */,
+				14015D91259611AC003F03DC /* FolderViewFlowLayout.swift */,
 				14783343246E7C680087C3EE /* PageViewController.swift */,
 				14783345246FA5980087C3EE /* SinglePageViewController.swift */,
 				14783347246FEF300087C3EE /* SpreadPageViewController.swift */,
@@ -189,14 +201,18 @@
 			files = (
 				14783346246FA5980087C3EE /* SinglePageViewController.swift in Sources */,
 				143371A32479618600EF650B /* Hash.swift in Sources */,
+				14015D8F2596114A003F03DC /* FolderViewCell.swift in Sources */,
 				14F0E6F7248A04A100C2A192 /* ThumbnailViewController.swift in Sources */,
 				14F224922466F60C00630C87 /* Archiver.swift in Sources */,
 				14A3B2F9249D925C0065D5DE /* ThumbnailViewCell.swift in Sources */,
 				142CD27E248F0A9E00347645 /* ControllerView.swift in Sources */,
+				14015D92259611AC003F03DC /* FolderViewFlowLayout.swift in Sources */,
 				14B5B2242466CA8F00E5E9A2 /* AppDelegate.swift in Sources */,
+				14015D8C2595B7AB003F03DC /* FolderViewController.swift in Sources */,
 				14F2249A24684BD000630C87 /* BaseViewController.swift in Sources */,
 				14783348246FEF300087C3EE /* SpreadPageViewController.swift in Sources */,
 				14A3B2FB249D929F0065D5DE /* ThumbnailViewFlowLayout.swift in Sources */,
+				14015D952596217B003F03DC /* FolderThumbnailLoader.swift in Sources */,
 				14783344246E7C680087C3EE /* PageViewController.swift in Sources */,
 				14B5B2262466CA8F00E5E9A2 /* SceneDelegate.swift in Sources */,
 			);

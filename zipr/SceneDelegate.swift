@@ -95,9 +95,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         guard let windowScene = (scene as? UIWindowScene) else { return }
         
-        if let a = session.stateRestorationActivity {
-            print(a.userInfo)
-        }
+
         
         connectionOptions.userActivities.forEach { (activity) in
             print(activity.userInfo)
@@ -107,6 +105,18 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 
         let window = UIWindow(windowScene: windowScene)
         self.window = window
+        
+        if let activity = connectionOptions.userActivities.first {
+            if let flag = activity.userInfo?["folder"] as? Bool {
+                if flag {
+                    let vc = BaseViewController(nibName: nil, bundle: nil)
+                    vc.needsOpenFolderPicker = true
+                    self.window?.rootViewController = vc
+                    self.window?.makeKeyAndVisible()
+                    return
+                }
+            }
+        }
         
         let vc = BaseViewController(nibName: nil, bundle: nil)
         self.window?.rootViewController = vc
@@ -138,6 +148,33 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     func sceneDidDisconnect(_ scene: UIScene) {
         os_log("[zipr] sceneDidDisconnect")
+        
+        if let windowScene = scene as? UIWindowScene {
+            if let window = windowScene.windows.first {
+                if let vc = window.rootViewController as? BaseViewController {
+                    print(vc)
+                    let vc_array = vc.children.compactMap { (vc) -> FolderViewController? in
+                        return vc as? FolderViewController
+                    }
+                    if let folderViewController = vc_array.first {
+//                        folderViewController.loader.clear()
+                    }
+                }
+            }
+        }
+        
+//        var currentScene: UIWindowScene? {
+//            return UIApplication.shared.connectedScenes.compactMap { (scene) -> UIWindowScene? in
+//                return scene as? UIWindowScene
+//            }
+//            .first { (scene) -> Bool in
+//                let candidate = scene.windows.first { (window) -> Bool in
+//                    return (window.rootViewController == self)
+//                }
+//                return (candidate != nil)
+//            }
+//        }
+        
         // Called as the scene is being released by the system.
         // This occurs shortly after the scene enters the background, or when its session is discarded.
         // Release any resources associated with this scene that can be re-created the next time the scene connects.

@@ -134,7 +134,7 @@ extension Archive {
         
         let entryInfos: [EntryInfo] = self.enumerated()
             .map { (offset, element) -> Entry in
-                print(element.path)
+//                print(element.path)
                 return element
             }
             .filter { (entry) -> Bool in

@@ -43,6 +43,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         super.buildMenu(with: builder)
     }
     
+    @objc func openFolder(_ sender: Any) {
+        let userActivity = NSUserActivity(activityType: "com.sonson.multiwindow")
+        userActivity.title = "aaaaaa"
+        userActivity.addUserInfoEntries(from: ["folder": true])
+        UIApplication.shared.requestSceneSessionActivation(nil, userActivity: userActivity, options: nil, errorHandler: nil)
+    }
+    
     class var openCommands: [UIKeyCommand] {
         return [
             UIKeyCommand(title: "Open...",
@@ -53,6 +60,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 propertyList: nil,
                 alternates: [],
                 discoverabilityTitle: "Open...",
+                attributes: [],
+                state: .off),
+            UIKeyCommand(title: "Open folder...",
+                image: nil,
+                action: #selector(AppDelegate.openFolder(_:)),
+                input: "F",
+                modifierFlags: [.command],
+                propertyList: nil,
+                alternates: [],
+                discoverabilityTitle: "Open folder...",
                 attributes: [],
                 state: .off),
             UIKeyCommand(title: "Open as New Window",
