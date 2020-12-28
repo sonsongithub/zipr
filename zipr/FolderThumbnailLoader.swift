@@ -10,13 +10,10 @@ import Foundation
 import UIKit
 import ZIPFoundation
 
-//protocol FolderThumbnailLoaderDelegate {
-//}
-
 class FolderThumbnailLoader {
     let semaphoreQueue = DispatchQueue(label: String(Date.timeIntervalSinceReferenceDate))
     let load_quque = DispatchQueue.global()
-    let semaphore = DispatchSemaphore(value: 2)
+    let semaphore = DispatchSemaphore(value: 4)
     var buffer: [String] = []
     var current: String? = nil
     
@@ -27,9 +24,7 @@ class FolderThumbnailLoader {
     }
     
     func clear() {
-        semaphoreQueue.sync {
-            self.cancelFlag = true
-        }
+        self.cancelFlag = true
     }
     
     func getCachePath(_ path: String) -> URL? {

@@ -179,6 +179,11 @@ extension Archive {
 }
 
 class Archiver {
+        
+    let semaphoreQueue = DispatchQueue(label: String(Date.timeIntervalSinceReferenceDate))
+    let load_quque = DispatchQueue.global()
+    let semaphore = DispatchSemaphore(value: 1)
+    
     let archive: Archive
     let entries: [Entry]
     let queue: DispatchQueue
@@ -251,19 +256,15 @@ class Archiver {
     }
     
     func cancelAll() {
-        queue.async {
-            for e in self.taskQueue {
-                e.progress.cancel()
-            }
-        }
+        cancelFlag = false
     }
     
     func cancel(_ page: Int) {
-        queue.async {
-            self.taskQueue = self.taskQueue.filter({ (task) -> Bool in
-                return (page != task.page)
-            })
-        }
+//        queue.async {
+//            self.taskQueue = self.taskQueue.filter({ (task) -> Bool in
+//                return (page != task.page)
+//            })
+//        }
     }
     
     func getCachePath(string: String) throws -> URL {
@@ -376,17 +377,53 @@ class Archiver {
         }
     }
     
+    var cancelFlag = false
+    
     func push(at index: Int) {
-        queue.async {
-            if let _ = self.taskQueue.firstIndex(where: { (task) -> Bool in
-                return (task.page == index)
-            }) {
-            } else {
-                let entry = self.entries[index]
-                let task = ArchiverTask(entry, page: index)
-                self.taskQueue.append(task)
+        
+        let entry = self.entries[index]
+        let task = ArchiverTask(entry, page: index)
+        
+        load_quque.async {
+            defer { self.semaphore.signal()}
+            
+            self.semaphore.wait()
+            
+            guard !self.cancelFlag else { return }
+            
+            print("Start page = " + String(index))
+            
+            do {
+                var d = Data()
+                _ = try self.archive.extract(task.entry, bufferSize: 20480, skipCRC32: true, progress: task.progress, consumer: { (data) in
+                    print("read from zip file - " + String(data.count))
+                    d.append(data)
+                })
+            
+                if let image = UIImage(data: d) {
+                    let userInfo: [String: Any] = [
+                        "image": image,
+                        "page": task.page,
+                        "identifier": self.identifier
+                    ]
+                    DispatchQueue.main.async {
+                        print("Post Loaded")
+                        NotificationCenter.default.post(name: Notification.Name("Loaded"), object: nil, userInfo: userInfo)
+                    }
+                } else {
+                    print("can not read image")
+                    let userInfo: [String: Any] = [
+                        "page": task.page,
+                        "identifier": self.identifier
+                    ]
+                    DispatchQueue.main.async {
+                        NotificationCenter.default.post(name: Notification.Name("LoadedFailed"), object: nil, userInfo: userInfo)
+                    }
+                }
+            } catch {
+                print(error)
             }
-            self.pop()
+            
         }
     }
     

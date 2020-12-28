@@ -107,7 +107,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         self.window = window
         
         if let activity = connectionOptions.userActivities.first {
-            if let flag = activity.userInfo?["folder"] as? Bool {
+            if let urlString = activity.userInfo?["URL"] as? String {
+                let url = URL(fileURLWithPath: urlString)
+                let vc = BaseViewController(nibName: nil, bundle: nil)
+                vc.needsOpenFilePicker = false
+                vc.needsOpenFolderPicker = false
+                self.window?.rootViewController = vc
+                self.window?.makeKeyAndVisible()
+                return
+            } else if let flag = activity.userInfo?["folder"] as? Bool {
                 if flag {
                     let vc = BaseViewController(nibName: nil, bundle: nil)
                     vc.needsOpenFolderPicker = true

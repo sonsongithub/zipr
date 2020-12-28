@@ -39,7 +39,8 @@ class FolderViewController: UIViewController, UICollectionViewDelegate, UICollec
                 let tmp = pathAsString as NSString
                 return (tmp.pathExtension == "zip")
             }
-            contents = array.map({ (fileName) -> String in
+            
+            contents = array.sorted().map({ (fileName) -> String in
                 return self.path.appendingPathComponent(fileName).path
             })
         } catch {
@@ -122,6 +123,11 @@ class FolderViewController: UIViewController, UICollectionViewDelegate, UICollec
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let path = contents[indexPath.item]
+        let userActivity = NSUserActivity(activityType: "com.sonson.multiwindow")
+        userActivity.title = "aaaaaa"
+        userActivity.addUserInfoEntries(from: ["URL": path])
+        UIApplication.shared.requestSceneSessionActivation(nil, userActivity: userActivity, options: nil, errorHandler: nil)
     }
     
     func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
