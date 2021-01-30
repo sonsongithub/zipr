@@ -41,14 +41,14 @@ class SpreadPageViewController: UIViewController {
         super.viewWillAppear(animated)
         if let archiver = self.archiver {
             
-            if let image = archiver.read(at: leftPage) {
+            if let image = archiver.cache(at: leftPage, startLoading: true) {
                 leftImageView.image = image
                 leftActivityIndicatorView.stopAnimating()
             } else {
                 leftActivityIndicatorView.startAnimating()
             }
             
-            if let image = archiver.read(at: rightPage) {
+            if let image = archiver.cache(at: rightPage, startLoading: true) {
                 rightImageView.image = image
                 rightActivityIndicatorView.stopAnimating()
             } else {

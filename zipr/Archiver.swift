@@ -134,7 +134,6 @@ extension Archive {
         
         let entryInfos: [EntryInfo] = self.enumerated()
             .map { (offset, element) -> Entry in
-//                print(element.path)
                 return element
             }
             .filter { (entry) -> Bool in
@@ -186,7 +185,6 @@ class Archiver {
     
     let archive: Archive
     let entries: [Entry]
-    let queue: DispatchQueue
     let identifier: String
     
     var reading = false
@@ -229,7 +227,6 @@ class Archiver {
     
     init(data fileData: Data) throws {
         self.identifier = fileData.digest(type: .sha256)
-        self.queue = DispatchQueue(label: self.identifier)
         guard let tmp = Archive(data: fileData, accessMode: .read, preferredEncoding: String.Encoding.shiftJIS) else {
             throw NSError(domain: "", code: 0, userInfo: nil)
         }
@@ -245,8 +242,6 @@ class Archiver {
     
     init(url fileURL: URL) throws {
         self.identifier = fileURL.absoluteString.digest(type: .sha256)
-        queue = DispatchQueue(label: self.identifier)
-        
         guard let tmp = Archive(url: fileURL, accessMode: .read, preferredEncoding: String.Encoding.shiftJIS) else {
             throw NSError(domain: "", code: 0, userInfo: nil)
         }
@@ -259,122 +254,47 @@ class Archiver {
         cancelFlag = false
     }
     
-    func cancel(_ page: Int) {
-//        queue.async {
-//            self.taskQueue = self.taskQueue.filter({ (task) -> Bool in
-//                return (page != task.page)
-//            })
-//        }
-    }
-    
-    func getCachePath(string: String) throws -> URL {
-        let urls = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
-        
-        if let url = urls.first {
-            let directoryURL = url.appendingPathComponent(self.identifier)
-            
-            var isDirectory: ObjCBool = false
-            if FileManager.default.fileExists(atPath: directoryURL.path, isDirectory: &isDirectory) {
-                let attr: [FileAttributeKey: Any] = [FileAttributeKey.modificationDate: Date()]
-                try FileManager.default.setAttributes(attr, ofItemAtPath: directoryURL.path)
-            } else {
-                try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true, attributes: nil)
-            }
-            let cacheURL = url.appendingPathComponent(self.identifier).appendingPathComponent(string.digest(type: .sha256))
-            return cacheURL
-        }
-        throw NSError(domain: "", code: 0, userInfo: nil)
-    }
-    
-    func pop() -> Void {
-        queue.async {
-            if self.currentTask != nil {
-                return
-            }
-            guard let tempCurrentTask = self.taskQueue.popLast() else {
-                return
-            }
-            self.currentTask = tempCurrentTask
-            
-            do {
-
-                
-                #if DEBUG
-                if self.concurrentTestFlag {
-                    let timeInterval = Double.random(in: 0..<0.6)
-                    Thread.sleep(forTimeInterval: timeInterval)
-                }
-                #endif
-                var d = Data()
-                
-                do {
-                    let cacheURL = try self.getCachePath(string: tempCurrentTask.entry.path)
-                    if FileManager.default.fileExists(atPath: cacheURL.absoluteString) {
-                        d = try Data(contentsOf: cacheURL)
-                    }
-                } catch {
-                    print(error)
-                }
-                
-                if d.count == 0 {
-                    _ = try self.archive.extract(tempCurrentTask.entry, bufferSize: 20480, skipCRC32: true, progress: tempCurrentTask.progress, consumer: { (data) in
-                        d.append(data)
-                    })
-                }
-                
-                if let image = UIImage(data: d) {
-                    let userInfo: [String: Any] = [
-                        "image": image,
-                        "page": tempCurrentTask.page,
-                        "identifier": self.identifier
-                    ]
-                    
-                    do {
-                        let cacheURL = try self.getCachePath(string: tempCurrentTask.entry.path)
-                        if !FileManager.default.fileExists(atPath: cacheURL.absoluteString) {
-                            if self.useCache {
-                                try d.write(to: cacheURL)
-                            }
-                        }
-                    } catch {
-                        print(error)
-                    }
-                    
-                    NotificationCenter.default.post(name: Notification.Name("Loaded"), object: nil, userInfo: userInfo)
-                } else {
-                    print("can not read image")
-                    let userInfo: [String: Any] = [
-                        "page": tempCurrentTask.page,
-                        "identifier": self.identifier
-                    ]
-                    NotificationCenter.default.post(name: Notification.Name("LoadedFailed"), object: nil, userInfo: userInfo)
-                }
-                self.currentTask = nil
-                
-            } catch {
-                let userInfo: [String: Any] = [
-                    "error": error,
-                    "page": tempCurrentTask.page,
-                    "identifier": self.identifier
-                ]
-                NotificationCenter.default.post(name: Notification.Name("LoadedFailed"), object: nil, userInfo: userInfo)
-            }
-            self.pop()
-        }
-    }
-    
-    func cache(at index: Int) -> UIImage? {
-        let entry = entries[index]
+    func cacheURL(_ path: String) -> URL? {
         do {
-            let cacheURL = try self.getCachePath(string: entry.path)
-            let data = try Data(contentsOf: cacheURL)
-            if let image = UIImage(data: data) {
-                return image
+            let urls = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
+            
+            if let url = urls.first {
+                let directoryURL = url.appendingPathComponent(self.identifier)
+                
+                var isDirectory: ObjCBool = false
+                if FileManager.default.fileExists(atPath: directoryURL.path, isDirectory: &isDirectory) {
+                    let attr: [FileAttributeKey: Any] = [FileAttributeKey.modificationDate: Date()]
+                    try FileManager.default.setAttributes(attr, ofItemAtPath: directoryURL.path)
+                } else {
+                    try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true, attributes: nil)
+                }
+                let cacheURL = url.appendingPathComponent(self.identifier).appendingPathComponent(path.digest(type: .sha256))
+                return cacheURL
             }
-            throw NSError(domain: "com.sonson.image", code: 0, userInfo: nil)
         } catch {
-            return nil
+            print(error)
         }
+        return nil
+    }
+    
+    func cache(at index: Int, startLoading: Bool = false) -> UIImage? {
+        guard index < entries.count else { return nil }
+        guard index >= 0 else { return nil }
+        do {
+            let entry = entries[index]
+            if let cacheURL = self.cacheURL(entry.path) {
+                let data = try Data(contentsOf: cacheURL)
+                if let image = UIImage(data: data) {
+                    return image
+                }
+            }
+        } catch {
+            print(error)
+        }
+        if startLoading {
+            push(at: index)
+        }
+        return nil
     }
     
     var cancelFlag = false
@@ -391,6 +311,9 @@ class Archiver {
             
             guard !self.cancelFlag else { return }
             
+            guard let cacheURL = self.cacheURL(entry.path) else { return }
+            guard !FileManager.default.fileExists(atPath: cacheURL.path) else { return }
+            
             print("Start page = " + String(index))
             
             do {
@@ -399,6 +322,14 @@ class Archiver {
                     print("read from zip file - " + String(data.count))
                     d.append(data)
                 })
+                
+                self.semaphoreQueue.sync {
+                    do {
+                        try d.write(to: cacheURL)
+                    } catch {
+                        print(error)
+                    }
+                }
             
                 if let image = UIImage(data: d) {
                     let userInfo: [String: Any] = [
@@ -425,22 +356,5 @@ class Archiver {
             }
             
         }
-    }
-    
-    func read(at index: Int, startLoading: Bool = true) -> UIImage? {
-        // ill index for entries
-        guard index >= 0 && index < entries.count else {
-            return nil
-        }
-        
-        if let image = cache(at: index) {
-            return image
-        }
-        
-        if startLoading {
-            push(at: index)
-        }
-        
-        return nil
     }
 }

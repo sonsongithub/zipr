@@ -26,7 +26,7 @@ class SinglePageViewController: UIViewController {
         super.viewWillAppear(animated)
         if let archiver = archiver {
             
-            if let image = archiver.read(at: page) {
+            if let image = archiver.cache(at: page, startLoading: true) {
                 imageView.image = image
                 activityIndicatorView.stopAnimating()
             } else {

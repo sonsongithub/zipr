@@ -103,16 +103,13 @@ class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICol
     }
     
     func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        if let _ = cell as? ThumbnailViewCell {
-            archiver.cancel( indexPath.item)
-        }
     }
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         self.collectionView.visibleCells.forEach { (cell) in
             if let cell = cell as? ThumbnailViewCell {
                 if cell.imageView.image == nil {
-                    if let image = archiver.read(at: cell.page) {
+                    if let image = archiver.cache(at: cell.page, startLoading: true) {
                         cell.imageView.image = image
                     }
                 }
@@ -124,7 +121,7 @@ class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICol
         self.collectionView.visibleCells.forEach { (cell) in
             if let cell = cell as? ThumbnailViewCell {
                 if cell.imageView.image == nil {
-                    if let image = archiver.read(at: cell.page) {
+                    if let image = archiver.cache(at: cell.page, startLoading: true) {
                         cell.imageView.image = image
                     }
                 }
@@ -137,7 +134,7 @@ class ThumbnailViewController: UIViewController, UICollectionViewDelegate, UICol
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ThumbnailViewCell", for: indexPath) as! ThumbnailViewCell
         cell.textLabel.text = String(indexPath.row + 1)
     
-        if let image = archiver.read(at: indexPath.item, startLoading: !collectionView.isDragging) {
+        if let image = archiver.cache(at: indexPath.item, startLoading: !collectionView.isDragging) {
             cell.imageView.image = image
             cell.page = indexPath.item
             cell.identifier = archiver.identifier

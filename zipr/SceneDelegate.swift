@@ -14,6 +14,10 @@ let scribe = OSLog(subsystem: "com.mycompany.myapp", category: "myapp")
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
     
+    deinit {
+        print("SceneDelegate deinit")
+    }
+    
     func getDisplayingBaseViewControllers() -> [BaseViewController] {
         
         let squences_windows = UIApplication.shared.connectedScenes.compactMap { (scene) -> UIWindowScene? in
@@ -112,6 +116,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 let vc = BaseViewController(nibName: nil, bundle: nil)
                 vc.needsOpenFilePicker = false
                 vc.needsOpenFolderPicker = false
+                vc.open(url: url)
                 self.window?.rootViewController = vc
                 self.window?.makeKeyAndVisible()
                 return
@@ -165,7 +170,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                         return vc as? FolderViewController
                     }
                     if let folderViewController = vc_array.first {
-//                        folderViewController.loader.clear()
+                        
+                        if let loader = folderViewController.loader {
+                            loader.clear()
+                        }
                     }
                 }
             }
@@ -190,6 +198,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) {
+        print(#function)
         os_log("[zipr] sceneDidBecomeActive")
         // Called when the scene has moved from an inactive state to an active state.
         // Use this method to restart any tasks that were paused (or not yet started) when the scene was inactive.

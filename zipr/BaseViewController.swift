@@ -12,6 +12,35 @@ import ZIPFoundation
 import os
 import UniformTypeIdentifiers
 
+extension UIViewController {
+    
+    func ownWindowScene() -> UIWindowScene? {
+        return UIApplication.shared.connectedScenes.compactMap { (scene) -> UIWindowScene? in
+            return scene as? UIWindowScene
+        }
+        .first { (scene) -> Bool in
+            let candidate = scene.windows.first { (window) -> Bool in
+                guard let rootVC = window.rootViewController else { return false }
+                return self.isDescendant(of: rootVC)
+            }
+            return (candidate != nil)
+        }
+    }
+    
+    func isDescendant(of viewController: UIViewController) -> Bool {
+        if viewController == self {
+            return true
+        }
+        
+        for i in 0..<viewController.children.count {
+            if self.isDescendant(of: viewController.children[i]) {
+                return true
+            }
+        }
+        return false
+    }
+}
+
 class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
     
     static let blackoutAlpha: CGFloat = 0.1
@@ -20,6 +49,9 @@ class BaseViewController: UIViewController, UIGestureRecognizerDelegate {
     
     var documentPickerViewController: UIDocumentPickerViewController?
 
+    deinit {
+        print("deinit BaseViewController")
+    }
 
     @objc func open(_ sender: Any) {
 //        openPicker()
@@ -252,7 +284,6 @@ extension BaseViewController {
             self.openPicker()
         }
     }
-    
 }
 
 // MARK: - UIDocumentPickerDelegate

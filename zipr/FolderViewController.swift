@@ -12,7 +12,7 @@ import UIKit
 
 class FolderViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
-    let loader = FolderThumbnailLoader()
+    var loader: FolderThumbnailLoader? = FolderThumbnailLoader()
     var contents: [String] = []
     let path: URL
     let collectionView: UICollectionView!
@@ -28,14 +28,20 @@ class FolderViewController: UIViewController, UICollectionViewDelegate, UICollec
         print("deinit FolderViewController")
     }
     
+    func visibulePaths() -> [String] {
+        return collectionView.indexPathsForVisibleItems.map { (indexPath) -> String in
+            return contents[indexPath.item]
+        }
+    }
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
         do {
-            print(self.path)
+//            print(self.path)
             let paths = try FileManager.default.subpathsOfDirectory(atPath: self.path.path)
             let array = paths.filter { (pathAsString) -> Bool in
-                print(pathAsString)
+//                print(pathAsString)
                 let tmp = pathAsString as NSString
                 return (tmp.pathExtension == "zip")
             }
@@ -46,7 +52,6 @@ class FolderViewController: UIViewController, UICollectionViewDelegate, UICollec
         } catch {
             print(error)
         }
-        print(contents)
     }
     
     init(_ url: URL) {
@@ -62,12 +67,40 @@ class FolderViewController: UIViewController, UICollectionViewDelegate, UICollec
         }()
         self.path = url
         super.init(nibName: nil, bundle: nil)
+    
+//        NotificationCenter.default.addObserver(forName: .init("NSWindowDidBecomeMainNotification"), object: nil, queue: nil) { notification in
+//            print("This window became focused:", notification.object)
+//        }NSWindowDidResignMainNotification
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(didBecomeMainNotification(notification:)), name: .init("NSWindowDidBecomeMainNotification"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(didResignMainNotification(notification:)), name: .init("NSWindowDidResignMainNotification"), object: nil)
+    }
+    
+    @objc func didBecomeMainNotification(notification : Notification) {
+        guard let windowScene = ownWindowScene() else { return }
+        guard let window = windowScene.windows.first else { return }
+        print(self.path)
+        print(window.isKeyWindow ? "key window" : "not key window")
+        if window.isKeyWindow {
+            self.loader?.restart()
+        } else {
+            self.loader?.clear()
+        }
+    }
+    
+    @objc func didResignMainNotification(notification : Notification) {
+        guard let windowScene = ownWindowScene() else { return }
+        guard let window = windowScene.windows.first else { return }
+//        self.loader?.clear()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         print("viewWillDisappear")
         super.viewWillDisappear(animated)
-        loader.clear()
+//        if let loader = loader {
+//            loader.clear()
+//        }
+//        loader = nil
     }
     
     override func viewDidLoad() {
@@ -131,6 +164,12 @@ class FolderViewController: UIViewController, UICollectionViewDelegate, UICollec
     }
     
     func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        print("disappear " + contents[indexPath.item])
+        
+        if let loader = loader {
+            loader.cancel_path(contents[indexPath.item])
+        }
+//        loader.cancel_path(contents[indexPath.item])
 //        if let _ = cell as? ThumbnailViewCell {
 //            archiver.cancel( indexPath.item)
 //        }
@@ -150,9 +189,9 @@ class FolderViewController: UIViewController, UICollectionViewDelegate, UICollec
     
 //    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
 //        self.collectionView.visibleCells.forEach { (cell) in
-//            if let cell = cell as? ThumbnailViewCell {
+//            if let cell = cell as? FolderViewCell {
 //                if cell.imageView.image == nil {
-//                    if let image = archiver.read(at: cell.page) {
+//                    if let image = loader.cache(cell.path, startLoading: true) {
 //                        cell.imageView.image = image
 //                    }
 //                }
@@ -166,13 +205,16 @@ class FolderViewController: UIViewController, UICollectionViewDelegate, UICollec
         
         cell.path = contents[indexPath.item]
         
-        if let image = loader.cache(contents[indexPath.item]) {
-            cell.imageView.image = image
-        } else {
-            loader.append(contents[indexPath.item])
+        
+        if let loader = loader {
+            if let image = loader.cache(contents[indexPath.item], startLoading: true) {
+                cell.imageView.image = image
+            }
         }
         
-        cell.textLabel.text = contents[indexPath.item]
+        let fullPath = contents[indexPath.item]
+        
+        cell.textLabel.text = (fullPath as NSString).lastPathComponent
         
     
 //        if let image = archiver.read(at: indexPath.item, startLoading: !collectionView.isDragging) {
