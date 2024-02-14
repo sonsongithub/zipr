@@ -3,29 +3,46 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 52;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		14015D8C2595B7AB003F03DC /* FolderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14015D8B2595B7AB003F03DC /* FolderViewController.swift */; };
+		14015D8F2596114A003F03DC /* FolderViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14015D8E2596114A003F03DC /* FolderViewCell.swift */; };
+		14015D92259611AC003F03DC /* FolderViewFlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14015D91259611AC003F03DC /* FolderViewFlowLayout.swift */; };
+		14015D952596217B003F03DC /* FolderThumbnailLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14015D942596217B003F03DC /* FolderThumbnailLoader.swift */; };
+		14185FF324C6DE5E00FDE20E /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 14185FF224C6DE5E00FDE20E /* Settings.bundle */; };
+		142CD27E248F0A9E00347645 /* ControllerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142CD27D248F0A9E00347645 /* ControllerView.swift */; };
 		143371A32479618600EF650B /* Hash.swift in Sources */ = {isa = PBXBuildFile; fileRef = 143371A22479618600EF650B /* Hash.swift */; };
+		1462DE3E257B6B2E000E39AB /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 1462DE3D257B6B2E000E39AB /* ZIPFoundation */; };
 		14783344246E7C680087C3EE /* PageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14783343246E7C680087C3EE /* PageViewController.swift */; };
 		14783346246FA5980087C3EE /* SinglePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14783345246FA5980087C3EE /* SinglePageViewController.swift */; };
 		14783348246FEF300087C3EE /* SpreadPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14783347246FEF300087C3EE /* SpreadPageViewController.swift */; };
+		14A3B2F9249D925C0065D5DE /* ThumbnailViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A3B2F8249D925C0065D5DE /* ThumbnailViewCell.swift */; };
+		14A3B2FB249D929F0065D5DE /* ThumbnailViewFlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A3B2FA249D929F0065D5DE /* ThumbnailViewFlowLayout.swift */; };
 		14B5B2242466CA8F00E5E9A2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B5B2232466CA8F00E5E9A2 /* AppDelegate.swift */; };
 		14B5B2262466CA8F00E5E9A2 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B5B2252466CA8F00E5E9A2 /* SceneDelegate.swift */; };
 		14B5B22D2466CA9000E5E9A2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 14B5B22C2466CA9000E5E9A2 /* Assets.xcassets */; };
 		14B5B2302466CA9000E5E9A2 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 14B5B22E2466CA9000E5E9A2 /* LaunchScreen.storyboard */; };
 		14B5B23A2466CAAC00E5E9A2 /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14B5B2392466CAAC00E5E9A2 /* CloudKit.framework */; };
-		14F224902466F41B00630C87 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 14F2248F2466F41B00630C87 /* ZIPFoundation */; };
+		14F0E6F7248A04A100C2A192 /* ThumbnailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14F0E6F6248A04A100C2A192 /* ThumbnailViewController.swift */; };
 		14F224922466F60C00630C87 /* Archiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14F224912466F60C00630C87 /* Archiver.swift */; };
 		14F2249A24684BD000630C87 /* BaseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14F2249924684BD000630C87 /* BaseViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		14015D8B2595B7AB003F03DC /* FolderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderViewController.swift; sourceTree = "<group>"; };
+		14015D8E2596114A003F03DC /* FolderViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderViewCell.swift; sourceTree = "<group>"; };
+		14015D91259611AC003F03DC /* FolderViewFlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderViewFlowLayout.swift; sourceTree = "<group>"; };
+		14015D942596217B003F03DC /* FolderThumbnailLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderThumbnailLoader.swift; sourceTree = "<group>"; };
+		14185FF224C6DE5E00FDE20E /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
+		142CD27D248F0A9E00347645 /* ControllerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerView.swift; sourceTree = "<group>"; };
 		143371A22479618600EF650B /* Hash.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hash.swift; sourceTree = "<group>"; };
 		14783343246E7C680087C3EE /* PageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageViewController.swift; sourceTree = "<group>"; };
 		14783345246FA5980087C3EE /* SinglePageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SinglePageViewController.swift; sourceTree = "<group>"; };
 		14783347246FEF300087C3EE /* SpreadPageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpreadPageViewController.swift; sourceTree = "<group>"; };
+		14A3B2F8249D925C0065D5DE /* ThumbnailViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailViewCell.swift; sourceTree = "<group>"; };
+		14A3B2FA249D929F0065D5DE /* ThumbnailViewFlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailViewFlowLayout.swift; sourceTree = "<group>"; };
 		14B5B2202466CA8F00E5E9A2 /* zipr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = zipr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		14B5B2232466CA8F00E5E9A2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		14B5B2252466CA8F00E5E9A2 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -34,6 +51,7 @@
 		14B5B2312466CA9000E5E9A2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		14B5B2372466CA9500E5E9A2 /* zipr.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = zipr.entitlements; sourceTree = "<group>"; };
 		14B5B2392466CAAC00E5E9A2 /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
+		14F0E6F6248A04A100C2A192 /* ThumbnailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailViewController.swift; sourceTree = "<group>"; };
 		14F224912466F60C00630C87 /* Archiver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Archiver.swift; sourceTree = "<group>"; };
 		14F2249924684BD000630C87 /* BaseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -44,7 +62,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				14B5B23A2466CAAC00E5E9A2 /* CloudKit.framework in Frameworks */,
-				14F224902466F41B00630C87 /* ZIPFoundation in Frameworks */,
+				1462DE3E257B6B2E000E39AB /* ZIPFoundation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,12 +95,21 @@
 				14B5B2232466CA8F00E5E9A2 /* AppDelegate.swift */,
 				14B5B2252466CA8F00E5E9A2 /* SceneDelegate.swift */,
 				14F2249924684BD000630C87 /* BaseViewController.swift */,
+				142CD27D248F0A9E00347645 /* ControllerView.swift */,
+				14F0E6F6248A04A100C2A192 /* ThumbnailViewController.swift */,
+				14A3B2FA249D929F0065D5DE /* ThumbnailViewFlowLayout.swift */,
+				14A3B2F8249D925C0065D5DE /* ThumbnailViewCell.swift */,
+				14015D8B2595B7AB003F03DC /* FolderViewController.swift */,
+				14015D942596217B003F03DC /* FolderThumbnailLoader.swift */,
+				14015D8E2596114A003F03DC /* FolderViewCell.swift */,
+				14015D91259611AC003F03DC /* FolderViewFlowLayout.swift */,
 				14783343246E7C680087C3EE /* PageViewController.swift */,
 				14783345246FA5980087C3EE /* SinglePageViewController.swift */,
 				14783347246FEF300087C3EE /* SpreadPageViewController.swift */,
 				14B5B22C2466CA9000E5E9A2 /* Assets.xcassets */,
 				14B5B22E2466CA9000E5E9A2 /* LaunchScreen.storyboard */,
 				14B5B2312466CA9000E5E9A2 /* Info.plist */,
+				14185FF224C6DE5E00FDE20E /* Settings.bundle */,
 			);
 			path = zipr;
 			sourceTree = "<group>";
@@ -112,7 +139,7 @@
 			);
 			name = zipr;
 			packageProductDependencies = (
-				14F2248F2466F41B00630C87 /* ZIPFoundation */,
+				1462DE3D257B6B2E000E39AB /* ZIPFoundation */,
 			);
 			productName = zipr;
 			productReference = 14B5B2202466CA8F00E5E9A2 /* zipr.app */;
@@ -125,7 +152,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1140;
-				LastUpgradeCheck = 1140;
+				LastUpgradeCheck = 1210;
 				ORGANIZATIONNAME = sonson;
 				TargetAttributes = {
 					14B5B21F2466CA8F00E5E9A2 = {
@@ -143,7 +170,7 @@
 			);
 			mainGroup = 14B5B2172466CA8F00E5E9A2;
 			packageReferences = (
-				14F2248E2466F41B00630C87 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
+				1462DE3C257B6B2E000E39AB /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 			);
 			productRefGroup = 14B5B2212466CA8F00E5E9A2 /* Products */;
 			projectDirPath = "";
@@ -160,6 +187,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				14B5B2302466CA9000E5E9A2 /* LaunchScreen.storyboard in Resources */,
+				14185FF324C6DE5E00FDE20E /* Settings.bundle in Resources */,
 				14B5B22D2466CA9000E5E9A2 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -173,10 +201,18 @@
 			files = (
 				14783346246FA5980087C3EE /* SinglePageViewController.swift in Sources */,
 				143371A32479618600EF650B /* Hash.swift in Sources */,
+				14015D8F2596114A003F03DC /* FolderViewCell.swift in Sources */,
+				14F0E6F7248A04A100C2A192 /* ThumbnailViewController.swift in Sources */,
 				14F224922466F60C00630C87 /* Archiver.swift in Sources */,
+				14A3B2F9249D925C0065D5DE /* ThumbnailViewCell.swift in Sources */,
+				142CD27E248F0A9E00347645 /* ControllerView.swift in Sources */,
+				14015D92259611AC003F03DC /* FolderViewFlowLayout.swift in Sources */,
 				14B5B2242466CA8F00E5E9A2 /* AppDelegate.swift in Sources */,
+				14015D8C2595B7AB003F03DC /* FolderViewController.swift in Sources */,
 				14F2249A24684BD000630C87 /* BaseViewController.swift in Sources */,
 				14783348246FEF300087C3EE /* SpreadPageViewController.swift in Sources */,
+				14A3B2FB249D929F0065D5DE /* ThumbnailViewFlowLayout.swift in Sources */,
+				14015D952596217B003F03DC /* FolderThumbnailLoader.swift in Sources */,
 				14783344246E7C680087C3EE /* PageViewController.swift in Sources */,
 				14B5B2262466CA8F00E5E9A2 /* SceneDelegate.swift in Sources */,
 			);
@@ -222,6 +258,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -250,6 +287,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_SWIFT_FLAGS = "-D DEBUG";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -282,6 +320,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -320,6 +359,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = JP866VWWSD;
 				INFOPLIST_FILE = zipr/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -345,6 +385,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = JP866VWWSD;
 				INFOPLIST_FILE = zipr/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -383,20 +424,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		14F2248E2466F41B00630C87 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
+		1462DE3C257B6B2E000E39AB /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/weichsel/ZIPFoundation";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.9.11;
+				minimumVersion = 0.9.18;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		14F2248F2466F41B00630C87 /* ZIPFoundation */ = {
+		1462DE3D257B6B2E000E39AB /* ZIPFoundation */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 14F2248E2466F41B00630C87 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			package = 1462DE3C257B6B2E000E39AB /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
 			productName = ZIPFoundation;
 		};
 /* End XCSwiftPackageProductDependency section */

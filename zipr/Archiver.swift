@@ -134,7 +134,7 @@ extension Archive {
         
         let entryInfos: [EntryInfo] = self.enumerated()
             .map { (offset, element) -> Entry in
-                print(element.path)
+//                print(element.path)
                 return element
             }
             .filter { (entry) -> Bool in
@@ -179,16 +179,53 @@ extension Archive {
 }
 
 class Archiver {
+        
+    let semaphoreQueue = DispatchQueue(label: String(Date.timeIntervalSinceReferenceDate))
+    let load_quque = DispatchQueue.global()
+    let semaphore = DispatchSemaphore(value: 1)
+    
     let archive: Archive
     let entries: [Entry]
     let queue: DispatchQueue
-    let semaphore = DispatchSemaphore(value: 0)
     let identifier: String
     
     var reading = false
+    var useCache = UserDefaults.standard.bool(forKey: "enabled_preference")
+    
+    let concurrentTestFlag = false
     
     var taskQueue: [ArchiverTask] = Array([])
     var currentTask: ArchiverTask? = nil
+    
+    static func deleteOldCacheFiles() {
+        
+        let urls = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
+        
+        if let url = urls.first {
+            do {
+                let paths = try FileManager.default.contentsOfDirectory(atPath: url.path)
+                
+                let refNow = Date.timeIntervalSinceReferenceDate
+                
+                paths.forEach { (path) in
+                    do {
+                        let url = url.appendingPathComponent(path)
+                        let attr = try FileManager.default.attributesOfItem(atPath: url.path)
+                        if let modificationDate = attr[FileAttributeKey.modificationDate] as? Date {
+                            print(modificationDate)
+                            if refNow - modificationDate.timeIntervalSinceReferenceDate > 2400 * 24 {
+                                try FileManager.default.removeItem(at: url)
+                            }
+                        }
+                    } catch {
+                        print(error)
+                    }
+                }
+            } catch {
+                print(error)
+            }
+        }
+    }
     
     init(data fileData: Data) throws {
         self.identifier = fileData.digest(type: .sha256)
@@ -198,6 +235,12 @@ class Archiver {
         }
         archive = tmp
         entries = archive.extractOrderedContents()
+
+        NotificationCenter.default.addObserver(self, selector: #selector(didChangeUserDefaults(notification:)), name: UserDefaults.didChangeNotification, object: nil)
+    }
+    
+    @objc func didChangeUserDefaults(notification : Notification) {
+        self.useCache = UserDefaults.standard.bool(forKey: "enabled_preference")
     }
     
     init(url fileURL: URL) throws {
@@ -209,37 +252,75 @@ class Archiver {
         }
         archive = tmp
         entries = archive.extractOrderedContents()
+        NotificationCenter.default.addObserver(self, selector: #selector(didChangeUserDefaults(notification:)), name: UserDefaults.didChangeNotification, object: nil)
     }
     
     func cancelAll() {
-        for e in taskQueue {
-            e.progress.cancel()
+        cancelFlag = false
+    }
+    
+    func cancel(_ page: Int) {
+//        queue.async {
+//            self.taskQueue = self.taskQueue.filter({ (task) -> Bool in
+//                return (page != task.page)
+//            })
+//        }
+    }
+    
+    func getCachePath(string: String) throws -> URL {
+        let urls = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
+        
+        if let url = urls.first {
+            let directoryURL = url.appendingPathComponent(self.identifier)
+            
+            var isDirectory: ObjCBool = false
+            if FileManager.default.fileExists(atPath: directoryURL.path, isDirectory: &isDirectory) {
+                let attr: [FileAttributeKey: Any] = [FileAttributeKey.modificationDate: Date()]
+                try FileManager.default.setAttributes(attr, ofItemAtPath: directoryURL.path)
+            } else {
+                try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true, attributes: nil)
+            }
+            let cacheURL = url.appendingPathComponent(self.identifier).appendingPathComponent(string.digest(type: .sha256))
+            return cacheURL
         }
+        throw NSError(domain: "", code: 0, userInfo: nil)
     }
     
     func pop() -> Void {
-        
-        self.semaphore.signal()
-        if currentTask != nil {
-            self.semaphore.wait()
-            return
-        }
-        guard let tempCurrentTask = taskQueue.popLast() else {
-            self.semaphore.wait()
-            return
-        }
-        currentTask = tempCurrentTask
-        self.semaphore.wait()
-
         queue.async {
+            if self.currentTask != nil {
+                return
+            }
+            guard let tempCurrentTask = self.taskQueue.popLast() else {
+                return
+            }
+            self.currentTask = tempCurrentTask
+            
             do {
-// for test
-//                Thread.sleep(forTimeInterval: 1)
+
+                
+                #if DEBUG
+                if self.concurrentTestFlag {
+                    let timeInterval = Double.random(in: 0..<0.6)
+                    Thread.sleep(forTimeInterval: timeInterval)
+                }
+                #endif
                 var d = Data()
                 
-                _ = try self.archive.extract(tempCurrentTask.entry, bufferSize: 20480, skipCRC32: true, progress: tempCurrentTask.progress, consumer: { (data) in
-                    d.append(data)
-                })
+                do {
+                    let cacheURL = try self.getCachePath(string: tempCurrentTask.entry.path)
+                    if FileManager.default.fileExists(atPath: cacheURL.absoluteString) {
+                        d = try Data(contentsOf: cacheURL)
+                    }
+                } catch {
+                    print(error)
+                }
+                
+                if d.count == 0 {
+                    _ = try self.archive.extract(tempCurrentTask.entry, bufferSize: 20480, skipCRC32: true, progress: tempCurrentTask.progress, consumer: { (data) in
+                        d.append(data)
+                    })
+                }
                 
                 if let image = UIImage(data: d) {
                     let userInfo: [String: Any] = [
@@ -247,14 +328,28 @@ class Archiver {
                         "page": tempCurrentTask.page,
                         "identifier": self.identifier
                     ]
+                    
+                    do {
+                        let cacheURL = try self.getCachePath(string: tempCurrentTask.entry.path)
+                        if !FileManager.default.fileExists(atPath: cacheURL.absoluteString) {
+                            if self.useCache {
+                                try d.write(to: cacheURL)
+                            }
+                        }
+                    } catch {
+                        print(error)
+                    }
+                    
                     NotificationCenter.default.post(name: Notification.Name("Loaded"), object: nil, userInfo: userInfo)
                 } else {
+                    print("can not read image")
                     let userInfo: [String: Any] = [
                         "page": tempCurrentTask.page,
                         "identifier": self.identifier
                     ]
                     NotificationCenter.default.post(name: Notification.Name("LoadedFailed"), object: nil, userInfo: userInfo)
                 }
+                self.currentTask = nil
                 
             } catch {
                 let userInfo: [String: Any] = [
@@ -264,28 +359,88 @@ class Archiver {
                 ]
                 NotificationCenter.default.post(name: Notification.Name("LoadedFailed"), object: nil, userInfo: userInfo)
             }
-            
-            self.semaphore.signal()
-            self.currentTask = nil
-            self.semaphore.wait()
-                
             self.pop()
         }
     }
     
-    func read(at index: Int) -> Bool {
+    func cache(at index: Int) -> UIImage? {
+        let entry = entries[index]
+        do {
+            let cacheURL = try self.getCachePath(string: entry.path)
+            let data = try Data(contentsOf: cacheURL)
+            if let image = UIImage(data: data) {
+                return image
+            }
+            throw NSError(domain: "com.sonson.image", code: 0, userInfo: nil)
+        } catch {
+            return nil
+        }
+    }
+    
+    var cancelFlag = false
+    
+    func push(at index: Int) {
+        
+        let entry = self.entries[index]
+        let task = ArchiverTask(entry, page: index)
+        
+        load_quque.async {
+            defer { self.semaphore.signal()}
+            
+            self.semaphore.wait()
+            
+            guard !self.cancelFlag else { return }
+            
+            print("Start page = " + String(index))
+            
+            do {
+                var d = Data()
+                _ = try self.archive.extract(task.entry, bufferSize: 20480, skipCRC32: true, progress: task.progress, consumer: { (data) in
+                    print("read from zip file - " + String(data.count))
+                    d.append(data)
+                })
+            
+                if let image = UIImage(data: d) {
+                    let userInfo: [String: Any] = [
+                        "image": image,
+                        "page": task.page,
+                        "identifier": self.identifier
+                    ]
+                    DispatchQueue.main.async {
+                        print("Post Loaded")
+                        NotificationCenter.default.post(name: Notification.Name("Loaded"), object: nil, userInfo: userInfo)
+                    }
+                } else {
+                    print("can not read image")
+                    let userInfo: [String: Any] = [
+                        "page": task.page,
+                        "identifier": self.identifier
+                    ]
+                    DispatchQueue.main.async {
+                        NotificationCenter.default.post(name: Notification.Name("LoadedFailed"), object: nil, userInfo: userInfo)
+                    }
+                }
+            } catch {
+                print(error)
+            }
+            
+        }
+    }
+    
+    func read(at index: Int, startLoading: Bool = true) -> UIImage? {
         // ill index for entries
         guard index >= 0 && index < entries.count else {
-            return false
+            return nil
         }
         
-        let entry = entries[index]
-        print(index)
-        let task = ArchiverTask(entry, page: index)
-        taskQueue.append(task)
+        if let image = cache(at: index) {
+            return image
+        }
         
-        pop()
+        if startLoading {
+            push(at: index)
+        }
         
-        return true
+        return nil
     }
 }

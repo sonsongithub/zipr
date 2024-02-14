@@ -14,21 +14,8 @@ let scribe = OSLog(subsystem: "com.mycompany.myapp", category: "myapp")
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
     
-    func macos_scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-        guard let url = URLContexts.first?.url else {
-            return
-        }
-        os_log("[zipr] url= %@", log: scribe, type: .error, url.absoluteString)
-
-        let windowCount = UIApplication.shared.connectedScenes.reduce(0) { (count, scene) -> Int in
-            if let uiscene = scene as? UIWindowScene {
-                return uiscene.windows.count + count
-            } else {
-                return count
-            }
-        }
-        os_log("[zipr] windowCount = %d", log: scribe, type: .error, windowCount)
-
+    func getDisplayingBaseViewControllers() -> [BaseViewController] {
+        
         let squences_windows = UIApplication.shared.connectedScenes.compactMap { (scene) -> UIWindowScene? in
             return scene as? UIWindowScene
         }
@@ -37,72 +24,125 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
         .joined()
         
-        let baseViewControllers = Array(squences_windows).compactMap { (window) -> BaseViewController? in
+        return Array(squences_windows).compactMap { (window) -> BaseViewController? in
             if let vc = window.rootViewController as? BaseViewController {
-                if vc.picker != nil && !vc.isOpenedAnyFile() {
+                if vc.documentPickerViewController != nil && !vc.isOpenedAnyFile {
                     return vc
                 }
             }
             return nil
         }
-
-        if let vc = baseViewControllers.first {
-            vc.open(url: url)
-        } else {
-            let act = NSUserActivity(activityType: "a")
-            act.userInfo = ["url": url.absoluteString]
-            UIApplication.shared.requestSceneSessionActivation(nil, userActivity: act, options: nil, errorHandler: nil)
-        }
-    }
-    
-    func ios_scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-        guard let url = URLContexts.first?.url else {
-            return
-        }
-        os_log("[zipr] url= %@", log: scribe, type: .error, url.absoluteString)
-        let act = NSUserActivity(activityType: "a")
-        act.userInfo = ["url": url.absoluteString]
-        UIApplication.shared.requestSceneSessionActivation(nil, userActivity: act, options: nil, errorHandler: nil)
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-        print("[zipr] scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>)")
-        os_log("[zipr] scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>)", log: scribe, type: .error)
+        os_log("[zipr] scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>)", log: scribe, type: .default)
         
-        #if targetEnvironment(macCatalyst)
-            macos_scene(scene, openURLContexts: URLContexts)
-        #else
-            ios_scene(scene, openURLContexts: URLContexts)
-        #endif
+        guard let url = URLContexts.first?.url else {
+            os_log("[zipr] URL not found.")
+            return
+        }
+        os_log("[zipr] url= %@", log: scribe, type: .default, url.absoluteString)
+        
+        do {
+            #if targetEnvironment(macCatalyst)
+                if let _ = getDisplayingBaseViewControllers().first {
+                    os_log("[zipr] Found existing base view controller.")
+                    os_log("[zipr] url= %@", log: scribe, type: .default, url.absoluteString)
+                    
+                    guard let windowScene = (scene as? UIWindowScene) else { return }
+                    let window = UIWindow(windowScene: windowScene)
+                    self.window = window
+
+                    let vc = BaseViewController(nibName: nil, bundle: nil)
+                    self.window?.rootViewController = vc
+                    vc.needsOpenFilePicker = false
+                    vc.open(url: url)
+                    
+                    #if targetEnvironment(macCatalyst)
+                    if let titlebar = windowScene.titlebar {
+                        titlebar.titleVisibility = .hidden
+                        titlebar.toolbar = nil
+                    }
+                    #endif
+                    
+                    self.window?.makeKeyAndVisible()
+                    
+                } else {
+                    let act = NSUserActivity(activityType: "a")
+                    act.userInfo = ["url": url.absoluteString]
+                    os_log("[zipr] Try to open new window", url.absoluteString)
+                    UIApplication.shared.requestSceneSessionActivation(nil, userActivity: act, options: nil, errorHandler: nil)
+                }
+            #else
+                if !url.startAccessingSecurityScopedResource() {
+                    throw NSError(domain: "com.sonson.zipr", code: 10, userInfo: nil)
+                }
+                let data = try Data.init(contentsOf: url)
+
+                url.stopAccessingSecurityScopedResource()
+
+                let act = NSUserActivity(activityType: "a")
+                act.userInfo = ["data": data]
+                UIApplication.shared.requestSceneSessionActivation(nil, userActivity: act, options: nil, errorHandler: nil)
+            #endif
+        } catch {
+            os_log("[zipr] url= %@", log: scribe, type: .error, error.localizedDescription)
+        }
     }
-    
-    func macos_scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
-        // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
-        // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
+
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+        os_log("[zipr] scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions)", log: scribe, type: .error)
+        
         guard let windowScene = (scene as? UIWindowScene) else { return }
+        
+
+        
+        connectionOptions.userActivities.forEach { (activity) in
+            print(activity.userInfo)
+            print(activity.activityType)
+            print(activity.title)
+        }
                 
         let window = UIWindow(windowScene: windowScene)
         self.window = window
         
-        let vc = BaseViewController(nibName: nil, bundle: nil)
-        self.window?.rootViewController = vc
-        
-        if let urlString = connectionOptions.userActivities.first?.userInfo?["url"] as? String {
-            if let url = URL(string: urlString) {
-                print(url)
+        if let activity = connectionOptions.userActivities.first {
+            if let urlString = activity.userInfo?["URL"] as? String {
+                let url = URL(fileURLWithPath: urlString)
+                let vc = BaseViewController(nibName: nil, bundle: nil)
                 vc.needsOpenFilePicker = false
-                vc.open(url: url)
+                vc.needsOpenFolderPicker = false
+                self.window?.rootViewController = vc
+                self.window?.makeKeyAndVisible()
+                return
+            } else if let flag = activity.userInfo?["folder"] as? Bool {
+                if flag {
+                    let vc = BaseViewController(nibName: nil, bundle: nil)
+                    vc.needsOpenFolderPicker = true
+                    self.window?.rootViewController = vc
+                    self.window?.makeKeyAndVisible()
+                    return
+                }
             }
         }
         
-        if let urlContext = connectionOptions.urlContexts.first {
+        let vc = BaseViewController(nibName: nil, bundle: nil)
+        self.window?.rootViewController = vc
+
+        if let data = connectionOptions.userActivities.first?.userInfo?["data"] as? Data {
+            print(data.count)
+            vc.needsOpenFilePicker = false
+            vc.open(data: data)
+        } else if let urlString = connectionOptions.userActivities.first?.userInfo?["url"] as? String {
+            if let url = URL(string: urlString) {
+                vc.needsOpenFilePicker = false
+                vc.open(url: url)
+            }
+        } else if let urlContext = connectionOptions.urlContexts.first {
             os_log("[zipr] url = %@", log: scribe, type: .error, urlContext.url.absoluteString)
             vc.needsOpenFilePicker = false
             vc.open(url: urlContext.url)
         }
-        
-        self.window?.makeKeyAndVisible()
         
         #if targetEnvironment(macCatalyst)
         if let titlebar = windowScene.titlebar {
@@ -110,45 +150,39 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             titlebar.toolbar = nil
         }
         #endif
-    }
-    
-    func ios_scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        guard let windowScene = (scene as? UIWindowScene) else { return }
-                
-        let window = UIWindow(windowScene: windowScene)
-        self.window = window
         
-        let vc = BaseViewController(nibName: nil, bundle: nil)
-        
-        if let urlString = connectionOptions.userActivities.first?.userInfo?["url"] as? String {
-            if let url = URL(string: urlString) {
-                print(url)
-                vc.needsOpenFilePicker = false
-                vc.open(url: url)
-            }
-        }
-        
-        if let urlContext = connectionOptions.urlContexts.first {
-            os_log("[zipr] url = %@", log: scribe, type: .error, urlContext.url.absoluteString)
-            vc.needsOpenFilePicker = false
-            vc.open(url: urlContext.url)
-        }
-        
-        self.window?.rootViewController = vc
         self.window?.makeKeyAndVisible()
     }
 
-    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        print("[zipr] scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions)")
-        os_log("[zipr] scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions)", log: scribe, type: .error)
-        #if targetEnvironment(macCatalyst)
-            macos_scene(scene, willConnectTo: session, options: connectionOptions)
-        #else
-            ios_scene(scene, willConnectTo: session, options: connectionOptions)
-        #endif
-    }
-
     func sceneDidDisconnect(_ scene: UIScene) {
+        os_log("[zipr] sceneDidDisconnect")
+        
+        if let windowScene = scene as? UIWindowScene {
+            if let window = windowScene.windows.first {
+                if let vc = window.rootViewController as? BaseViewController {
+                    print(vc)
+                    let vc_array = vc.children.compactMap { (vc) -> FolderViewController? in
+                        return vc as? FolderViewController
+                    }
+                    if let folderViewController = vc_array.first {
+//                        folderViewController.loader.clear()
+                    }
+                }
+            }
+        }
+        
+//        var currentScene: UIWindowScene? {
+//            return UIApplication.shared.connectedScenes.compactMap { (scene) -> UIWindowScene? in
+//                return scene as? UIWindowScene
+//            }
+//            .first { (scene) -> Bool in
+//                let candidate = scene.windows.first { (window) -> Bool in
+//                    return (window.rootViewController == self)
+//                }
+//                return (candidate != nil)
+//            }
+//        }
+        
         // Called as the scene is being released by the system.
         // This occurs shortly after the scene enters the background, or when its session is discarded.
         // Release any resources associated with this scene that can be re-created the next time the scene connects.
@@ -156,21 +190,25 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) {
+        os_log("[zipr] sceneDidBecomeActive")
         // Called when the scene has moved from an inactive state to an active state.
         // Use this method to restart any tasks that were paused (or not yet started) when the scene was inactive.
     }
 
     func sceneWillResignActive(_ scene: UIScene) {
+        os_log("[zipr] sceneWillResignActive")
         // Called when the scene will move from an active state to an inactive state.
         // This may occur due to temporary interruptions (ex. an incoming phone call).
     }
 
     func sceneWillEnterForeground(_ scene: UIScene) {
+        os_log("[zipr] sceneWillEnterForeground")
         // Called as the scene transitions from the background to the foreground.
         // Use this method to undo the changes made on entering the background.
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
+        os_log("[zipr] sceneDidEnterBackground")
         // Called as the scene transitions from the foreground to the background.
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.

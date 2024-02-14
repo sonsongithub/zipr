@@ -145,11 +145,11 @@ extension Data {
      */
     public func digest(type: HashType) -> Data {
         var destinationBuffer = [UInt8](repeating: 0, count: type.digestLength)
-        return self.withUnsafeBytes({ (body: UnsafePointer<UInt8>) -> Data in
-            let p = UnsafeRawPointer(body)
+        return self.withUnsafeBytes { (body: UnsafeRawBufferPointer) -> Data in
+            let p = body.baseAddress!
             type.digest(p, UInt32(self.count), &destinationBuffer)
             return Data(destinationBuffer)
-        })
+        }
     }
     
     /**
@@ -167,7 +167,11 @@ extension Data {
      - returns: To be written.
      */
     fileprivate var hex: String {
-        return self.withUnsafeBytes { return _hex(body: $0, length: self.count) }
+        return self.withUnsafeBytes { (body: UnsafeRawBufferPointer) -> String in
+            let op = OpaquePointer(body.baseAddress!)
+            let p = UnsafePointer<UInt8>(op)
+            return _hex(body: p, length: self.count)
+        }
     }
     
 }
